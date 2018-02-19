@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+        <meta charset="utf-8" />
+        <title>Salentia Stuff - Yannick Van Huele</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Salentia Stuff </a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about-salentia-stuff.html">About Salentia Stuff</a></li>
+                    <li><a href="/category/data-science.html">Data-Science</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/k-means-clustering-part-1.html">K-Means Clustering Part 1</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2018-02-18T00:00:00-07:00">
+                Published: Sun 18 February 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/yannick-van-huele.html">Yannick Van Huele</a>
+        </address>
+<p>In <a href="/category/data-science.html">Data-Science</a>.</p>
+
+</footer><!-- /.post-info --><h3>Just Another Review of <span class="math">\(K\)</span>-Means</h3>
+<p><span class="math">\(K\)</span>-means clustering is a well-known algorithm for which there already exist many good online resources. My first introduction to <span class="math">\(K\)</span>-means (as was the case with many other machine learning techniques) was from the textbook <a href="http://www-bcf.usc.edu/~gareth/ISL/"><em>Introduction to Statistical Learning</em></a>. However, a recent experience caused me to revisit this algorithm. After discussing <span class="math">\(K\)</span>-means with someone who held some misconceptions about the algorithm, I decided to dig deeper into some of the details. Though I doubt those misconceptions are widely held, I wanted to address a few of them. Looking more closely at the algorithm, I learned a few new things as well -- in particular, the different initialization techniques. Instead of focusing on a few isolated aspects of <span class="math">\(K\)</span>-means, it seemed more natural to wrap them together into a general discussion of the algorithm. And that's how another review of <span class="math">\(K\)</span>-means clustering was born.  I wish I could say that I'm presenting <span class="math">\(K\)</span>-means from an exciting new point of view that will completely redefine the way you think about the algorithm. But the truth is I mostly just had fun making some plots and wanted to share the results.</p>
+<p>I decided to split the discussion into several posts. In this first post, we'll talk about why one might use <span class="math">\(K\)</span>-means clustering, discuss how to choose the number of clusters, and then give a brief overview of the algorithm. In the second part, we'll discuss different initalization techniques and the importance of running the algorithm several times with different random initializations. Then, in a third post, we'll look a little more closely at the math behind <span class="math">\(K\)</span>-means and look at some data that causes trouble for <span class="math">\(K\)</span>-means.</p>
+<p>The code used to generate the figures can be found here.</p>
+<h2>MISSING LINK</h2>
+<h3><span class="math">\(K\)</span>-Means at a Glance</h3>
+<p><span class="math">\(K\)</span>-means clustering is an unsupervised learning algorithm which separates data into <span class="math">\(K\)</span> distinct groups. As with many other unsupervised methods, the goal is to discover hidden structure within the data. In particular, <span class="math">\(K\)</span>-means tries to separate data points into groups where the points in a group are closer to each other than to points in other groups.</p>
+<p>In low dimensional data (2 or 3 variables), we might be able to directly identify structure by plotting the data. For higher dimensional data, this cannot often be done nicely. Furthermore, even when we can identify structure in data by plotting it, we often want to describe the structure in a way that we can make further use of it.</p>
+<p>For example, in the plot below, we can see that the points cluster nicely into four distinct blobs, but if we want to make use of this clustering, we need a criterion for determining which points are part of each cluster.</p>
+<p align="center"><img alt="Four well-separated clusters of points" src="/images/k-means/four_blobs.png" /></p>
+<p>We might start by noting that the points in the top-left cluster are distinguished from the rest by the property that <span class="math">\(x &lt; 0\)</span> and <span class="math">\(y &gt; 6\)</span>. Similar methods work for the bottom-right cluster, but the <span class="math">\(x\)</span>- and <span class="math">\(y\)</span>-coordinates of the two other clusters overlap.</p>
+<p>Thus, we turn to unsupervised learning techniques such as <span class="math">\(K\)</span>-means clustering to discover structure in our data.</p>
+<h3>An Example: Handwritten Digits</h3>
+<p>Clustering techniques are often used for customer segmentation.</p>
+<p>Other examples.</p>
+<p>Transition.</p>
+<p>Let's work with the test set of the <a href="http://archive.ics.uci.edu/ml/datasets/optical+recognition+of+handwritten+digits">UCI ML Optical Recognition of Handwritten Digits Data Set</a> which is included in the <a href="http://scikit-learn.org/stable/datasets/index.html">scikit-learn datasets package</a>. This data set consists of 1797 samples, each corresponding to the pixel intensities of an 8 by 8 pixel grayscale image of a handwritten digit. A few example images are shown below (reconstructed from 8x8 numeric arrays of pixel intensities):</p>
+<p align="center"><img alt="Examples of handwritten digits from the dataset" src="/images/k-means/example_digits.png" /></p>
+<p><strong>Toy Problem:</strong> <em>Separate the digits into 3 groups of digits having similar shapes (or, more precisely, similar pixel intensity values).</em></p>
+<p>We already have a good system for separating these digits into 10 classes (i.e., by digit), but it's not quite as clear how to separate them into just 3 classes. To try and solve this problem, we can apply <span class="math">\(K\)</span>-means clustering with <span class="math">\(K = 3\)</span>, and look at some of the digits that made it into each cluster.</p>
+<p align="center"><img alt="Digits separated into three clusters" src="/images/k-means/digit_clusters.png" /></p>
+<p>Without knowing anything about digits, the algorithm has nonetheless picked up on similarities. For example, the last cluster seems to contain most of the 0s, 4s, and 6s.</p>
+<p>For a more rigorous analysis, consider the following table which records how many instances of each digit made it into each cluster.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
