@@ -135,4 +135,4 @@ Let's wrap up this section with small warning: the number of clusters is an opti
         "}";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content></entry></feed>
+&lt;/script&gt;</content><category term="clustering"></category><category term="k-means"></category></entry></feed>
