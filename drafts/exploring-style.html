@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+        <meta charset="utf-8" />
+        <title>Exploring Style</title>
+        <link rel="stylesheet" href="https://yvanhuele.github.io/theme/css/main.css" />
+        <link href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Salientia Stuff Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://yvanhuele.github.io/">Salientia Stuff </a></h1>
+                <nav><ul>
+                    <li><a href="https://yvanhuele.github.io/pages/about.html">About</a></li>
+                    <li class="active"><a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a></li>
+                    <li><a href="https://yvanhuele.github.io/category/word-of-the-week.html">Word of the Week</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://yvanhuele.github.io/drafts/exploring-style.html" rel="bookmark"
+           title="Permalink to Exploring Style">Exploring Style</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2018-03-09T20:00:00-07:00">
+                Published: Fri 09 March 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://yvanhuele.github.io/author/yannick.html">Yannick</a>
+        </address>
+<p>In <a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a>.</p>
+<p>tags: <a href="https://yvanhuele.github.io/tag/style-transfer.html">style-transfer</a> </p>
+</footer><!-- /.post-info -->      <p>Recently, I've been having a lot of fun playing with <a href="https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/15_Style_Transfer.ipynb">this TensorFlow tutorial</a> on style transfer by <a href="http://www.hvass-labs.org/">Magnus Erik Hvass Pedersen</a> based off of the paper <a href="https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Gatys_Image_Style_Transfer_CVPR_2016_paper.pdf"><em>Image Style Transfer Using Convolutional Neural Networks</em></a> by Gatys, Ecker, and Bethge. The basic goal in style transfer is to take a photograph and redraw it in a particular artistic style such as that of van Gogh's <em>The Starry Night</em>. The final result should match the content of the first image and the style of the second.</p>
+<p>For example, using the tutorial to combine a photograph of Delicate Arch with the style of <a href="https://en.wikipedia.org/wiki/The_Hunters_in_the_Snow">Bruegel's Jagers in de Sneeuw</a>, I obtained the following image:</p>
+<p align="center"><img align="center" alt="Delicate Arch in the style of juice from pitted cherries running down a wooden table" src="https://yvanhuele.github.io/images/style-transfer/arch+bruegel_jagers_full.png" style="max-width:90%" /></p>
+<p>Gatys, Ecker, and Bethge's suggested using a deep convolutional neural network to define both the content and the style of an image. The convolutional filters identify different features of an image: colors, corners, and edges in the early layers and more complicated features built from these in the later layers. Gatys, Ecker, and Bethge's idea was that these feature activations can be used to capture both content and style. </p>
+<p>If you want to play with style transfer yourself but don't want to work directly with neural networks, you can make use of the algorithm in black-box fashion with <a href="https://deepart.io/">DeepArt</a>.</p>
+<h2>What is Content?</h2>
+<p>Capturing content is fairly straightforward: if you can generate an image having the same feature activations as the original content image — that is, the images display the same shapes in the same locations — your two images should have similar content. Of course, if we match all of the feature activations perfectly, we risk reconstructing the content image too closely, thus defeating the purpose of style transfer. So we need to decide which layers of the convolutional network to use for content.</p>
+<p>One way to get an idea of what structure is captured by each layer of the network is to perform style transfer without a style image. That is, start with a white noise image and try and try to reconstruct our content image using only specific layers.</p>
+<p align="center"><img align="center" alt="Left: white noise; Right: image of Delicate Arch we wish to generate" src="https://yvanhuele.github.io/images/style-transfer/noise_to_arch.png" style="max-width:90%" /></p>
+<p>A perfect reconstruction would take the image on the left as input and produce the image on the right as output.</p>
+<p>We're working with the VGG-16 convolutional neural network described in <a href="https://arxiv.org/abs/1409.1556">this paper</a>. The network contains 13 convolutional layers using small (3x3) convolutional filters. Let's see what we get when we use different layers in the network for the content:</p>
+<p align="center"><img align="center" alt="Images of Delicate Arch generated using the different odd layers 1, 3, 5, ..., 13 as the content layer" src="https://yvanhuele.github.io/images/style-transfer/content_layers_arch.png" style="max-width:90%" /></p>
+<p>Matching the features at the first layer reproduces the image almost perfectly. By the thirteenth layer, the arch is almost unrecognizable. As we increase the layer we're working with, the colors match less and less and the edges become less sharp.</p>
+<p>Note that, when working with the earlier layers, we're not explicitly matching the complex features. Instead we get them for free by matching the smaller building blocks: if you know that you have two eyes sitting above a nose and a mouth, it's quite likely that you have a face.  </p>
+<h2>What is Style?</h2>
+<p>It might be tempting to try and capture style in the exact same way we did for content: try to match the features in the lower levels of the network to the style image. But we saw that matching the features in the low levels automatically matches the features in the high levels as well and we don't want to override the content. Furthermore, the feature activations themselves carry information about location and it's reasonable to expect style to be a global property of the image. Gatys, Ecker, and Bethge's idea was to not directly match the feature activations, but instead try to match some of their statistical properties. The tool they use for this is the <a href="https://en.wikipedia.org/wiki/Gramian_matrix">Gram matrix</a>. So what stylistic elements are captured by Gram matrices?</p>
+<p>We're going to explore this question both quantitatively and qualitatively. We'll begin with a highly simplified example — 2x2 black and white images — and work directly with Gram matrices to understand how they relate to style. Later on we'll use style transfer to generate images with style and no content. By comparing the original style images to the generated images, we can get a feeling as to what is counted as style when using the VGG-16 network.</p>
+<h4>Gram Matrix Definition</h4>
+<p>The Gram matrix of a set of vectors <span class="math">\(v_1, v_2, \ldots, v_n\)</span> is the matrix whose <span class="math">\((i,j)\)</span>-th entry consists of the dot product of <span class="math">\(v_i\)</span> with <span class="math">\(v_j\)</span>. If we let <span class="math">\(V\)</span> denote the matrix whose <span class="math">\(j\)</span>-th column is <span class="math">\(v_j\)</span>, so <span class="math">\(V = [v_1 \; v_2 \; \cdots \; v_n]\)</span>, then the Gram matrix of these vectors can be represented as the product <span class="math">\(V^T V\)</span>.</p>
+<p>The Gram matrix is related to the covariance matrix: If the vectors are centered random variables (each entry of a fixed vector is drawn from the a common distribution with mean 0), then the Gram matrix is proportional to the sample covariance matrix. If the vectors are not centered, then the Gram matrix seems to capture a mix of information about both the means and the covariances.</p>
+<h4>A Spherical Cow</h4>
+<p><img align="right" alt="2x2 image with white in top left corner and black everywhere else" src="https://yvanhuele.github.io/images/style-transfer/simple2x2.png" style="max-width:90%; margin:2%" /></p>
+<p>Let's work with a toy example. Suppose we are working with 2x2 black and white images. We'll represent the intensity of each pixel on a scale from 0 (black) to 1 (white). We'll apply to each image a single 1x1 convolutional filter corresponding to the identity: it takes the pixel intensity as input and returns the same value as the output.</p>
+<p>For example, if we take the sample image on the right, the feature activations form the vector <span class="math">\(v = [1, 0, 0, 0]\)</span>. In this case, the Gram matrix has a single entry which is the dot product of this vector with itself:</p>
+<div class="math">$$
+1^2 + 0^2 + 0^2 + 0^2 = 1
+$$</div>
+<p>Images with the same gram matrix can be represented by matrices <span class="math">\(A = (a_{ij})\)</span> satisfying</p>
+<div class="math">$$
+a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
+$$</div>
+<p>Here are some examples of images satisfying this property:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram.png" style="max-width:90%" /></p>
+<p>Both the mean and the variance of the pixel intensities vary from one image to the next with a sort of trade-off: as the mean intensity increases, the variance decreases.</p>
+<p>Covariance matrices are more familiar objects and more easily interpretable so let's see what we get when if we center the activations before computing the Gram matrix. The mean value of the coordinates of <span class="math">\(v = [1, 0, 0, 0]\)</span> is <span class="math">\(1/4\)</span>. Subtracting, we get the vector <span class="math">\(w = [3/4, -1/4, -1/4, -1/4]\)</span> and the dot product of <span class="math">\(w\)</span> with itself is</p>
+<div class="math">$$
+\left(\frac{3}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 = \frac{3}{4}
+$$</div>
+<p>For lack of a better term, we'll call this the <em>centered Gram matrix</em>.</p>
+<p>Each image with the same centered Gram matrix can be represented by a matrix of pixel intensities <span class="math">\(A\)</span> satisfying</p>
+<div class="math">$$
+(a_{11} - \bar{a})^2 + (a_{12} - \bar{a})^2 + (a_{21} - \bar{a})^2 + (a_{22} - \bar{a})^2 = \frac{3}{4}
+$$</div>
+<p>where <span class="math">\(\bar{a}\)</span> is the mean of the entries:</p>
+<div class="math">$$
+\bar{a} = \frac{a_{11} + a_{12} + a_{21} + a_{22}}{4}
+$$</div>
+<p>Here are some examples of images with this property:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_centered.png" style="max-width:90%" /></p>
+<p>The pixel intensities of these images all have the same fixed variance of 3/4. However, the mean intensities do vary from one image to the next. So, for example, one could add or subtract 0.05 to each of the intensities in the third matrix without altering the centered Gram matrix.</p>
+<p>The Gram matrix and centered Gram matrix give different results. Which represents style better? It's difficult to say, especially with our constrained example. What happens if we impose both constraints? That is, what do we get if we require both the Gram matrix and the centered Gram matrix to match those of the original image?</p>
+<div class="math">$$
+\sum_{i, j} a_{ij}^2 = a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
+$$</div>
+<div class="math">$$
+\sum_{i, j} a_{ij} =  a_{11} + a_{12}  + a_{21} + a_{22} = 1
+$$</div>
+<p>
+Note that
+</p>
+<div class="math">$$
+\left(\sum_{i, j} a_{ij} \right)^2 = \sum_{ij} a_{ij}^2 + 2 \left( \sum_{(i,j) \neq (k, \ell)} a_{ij} a_{k\ell} \right)
+$$</div>
+<p>
+Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each of the cross terms <span class="math">\(a_{ij} a_{k\ell}\)</span> is zero and, therefore, that at most one of the <span class="math">\(a_{ij}\)</span> is nonzero.</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices and centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram_and_centered.png" style="max-width:90%" /></p>
+<h4>A More Rigid Style</h4>
+<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">gram_matrix</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+
+    <span class="c1"># Get the number of feature channels for the input tensor, </span>
+    <span class="c1"># which is assumed to be from a convolutional layer with 4-dim.</span>
+    <span class="n">num_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="c1"># Reshape the tensor so it is a 2-dim matrix. This essentially</span>
+    <span class="c1"># flattens the contents of each feature-channel.</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">])</span>
+
+    <span class="c1"># Subtract the mean activation value from each feature so that</span>
+    <span class="c1"># our Gram matrix is proportional to the covariance matrix</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">centered_matrix</span> <span class="o">=</span> <span class="n">matrix</span> <span class="o">-</span> <span class="n">means</span>
+
+    <span class="c1"># Calculate the Gram-matrix as the matrix-product of</span>
+    <span class="c1"># the 2-dim matrix with itself. This calculates the</span>
+    <span class="c1"># dot-products of all combinations of the feature-channels.</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="p">)</span>
+
+    <span class="c1"># Do the same with the centered matrix</span>
+    <span class="n">gram_centered</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">centered_matrix</span><span class="p">),</span> <span class="n">centered_matrix</span><span class="p">)</span>
+
+    <span class="c1"># Return both Gram matrices</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">gram</span><span class="p">,</span> <span class="n">gram_centered</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>      
+</pre></div>
+
+
+<h4>Different Style Layers</h4>
+<p align="center"><img align="center" alt="Style images generated from plants1 using different layers" src="https://yvanhuele.github.io/images/style-transfer/style_layers_plants1.png" style="max-width:90%" /></p>
+<h2>Fashion Show</h2>
+<p>Some generated style images closely resemble the image they're based on. I think images generated using the style of mud 4 and rock 1 are particularly convincing.</p>
+<p align="center"><img alt="Styles that closely match the original image: algae1, barnacles2, cactus1, and cherry1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles1.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: fall_leaves1, flower5, moss1, and mud4" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles2.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: needles1, petroglyphs1, rock1, and stones1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles3.png" style="max-width:90%" /></p>
+<p>Flowers were a little hit and miss. Often the generated image pushed the bright color of the flower to the border of the image (e.g. flowers 7, 8, 10, and 12 below). Images generated from photos with lots of small flowers tended to match the originals more closely (flower 17 below and flower 5 above).</p>
+<p align="center"><img alt="Styles for flower images 1, 4, 7, and 8" src="https://yvanhuele.github.io/images/style-transfer/flower_styles1.png" style="max-width:90%" />
+<img alt="Styles for flower images 10, 12, 13, and 17" src="https://yvanhuele.github.io/images/style-transfer/flower_styles2.png" style="max-width:90%" /></p>
+<p>Some of my personal favorites:</p>
+<p align="center"><img alt="Original image and generated style for aspen1, books1, bridge1, and cat2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles1.png" style="max-width:90%" />
+<img alt="Original image and generated style for flamingo1, flower15, gasworks1, and lichen2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles2.png" style="max-width:90%" />
+<img alt="Original image and generated style for lilypad1, pie1, spiderweb1, and yucca2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles3.png" style="max-width:90%" /></p>
+<p align="center"><img alt="" src="https://yvanhuele.github.io/images/style-transfer/artificial_styles.png" style="max-width:90%" /></p>
+<p align="center"><img alt="" src="https://yvanhuele.github.io/images/style-transfer/artwork_styles.png" style="max-width:90%" /></p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is a slight modification of the notmyidea theme by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
