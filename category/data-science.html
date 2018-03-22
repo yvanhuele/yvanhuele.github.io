@@ -23,98 +23,185 @@
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="https://yvanhuele.github.io/k-means-clustering-part-1.html">K-Means Clustering Part 1</a></h1>
+                    <h1 class="entry-title"><a href="https://yvanhuele.github.io/exploring-style.html">Exploring Style</a></h1>
 <footer class="post-info">
-        <abbr class="published" title="2018-02-18T18:00:00-07:00">
-                Published: Sun 18 February 2018
+        <abbr class="published" title="2018-03-21T23:50:00-06:00">
+                Published: Wed 21 March 2018
         </abbr>
 
         <address class="vcard author">
                 By                         <a class="url fn" href="https://yvanhuele.github.io/author/yannick.html">Yannick</a>
         </address>
 <p>In <a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a>.</p>
-<p>tags: <a href="https://yvanhuele.github.io/tag/clustering.html">clustering</a> <a href="https://yvanhuele.github.io/tag/k-means.html">k-means</a> </p>
-</footer><!-- /.post-info --><h2>Just Another Review of K-Means</h2>
-<p>K-means clustering is a well-known algorithm for which there already exist many good online resources. My first introduction to K-means (as was the case with many other machine learning techniques) was from the textbook <a href="http://www-bcf.usc.edu/~gareth/ISL/"><em>Introduction to Statistical Learning</em></a>. However, a recent experience caused me to revisit this algorithm. After discussing K-means with someone who held some misconceptions about the algorithm, I decided to dig deeper into some of the details. Though I doubt those misconceptions are widely held, I wanted to address a few of them. Looking more closely at the algorithm, I learned a few new things as well -- in particular, the different initialization techniques. Instead of focusing on a few isolated aspects of K-means, it seemed more natural to wrap them together into a general discussion of the algorithm. And that's how another review of K-means clustering was born.  I wish I could say that I'm presenting K-means from an exciting new point of view that will completely redefine the way you think about the algorithm. But the truth is I mostly just had fun making some plots and wanted to share the results.</p>
-<p>I decided to split the discussion into several posts. In this first post, we'll talk about why one might use K-means clustering, discuss how to choose the number of clusters, and then give a brief overview of the algorithm. In the second part, we'll discuss different initialization techniques and the importance of running the algorithm several times with different random initializations. Then, in a third post, we'll look a little more closely at the math behind K-means and look at some data that causes trouble for K-means.</p>
-<p>The figures in this post were generated using Matplotib. All of the code can be found in <a href="https://github.com/yvanhuele/yvanhuele.github.io/blob/extra-blog-materials/K-Means/K-Means%20Clustering.ipynb">this jupyter notebook</a>.</p>
-<h2>K-Means at a Glance</h2>
-<p>K-means clustering is an unsupervised learning algorithm which separates data into K distinct groups. As with many other unsupervised methods, the goal is to discover hidden structure within the data. In particular, K-means tries to separate data points into groups where the points in a group are closer to each other than to points in other groups.</p>
-<p>In low dimensional data (2 or 3 variables), we might be able to directly identify structure by plotting the data. For higher dimensional data, this cannot often be done nicely. Furthermore, even when we can identify structure in data by plotting it, we often want to describe the structure in a way that we can make further use of it.</p>
-<p>For example, in the plot below, we can see that the points cluster nicely into four distinct blobs, but if we want to make use of this clustering, we need a criterion for determining which points are part of each cluster.</p>
-<p align="center"><img alt="Four well-separated clusters of points" src="https://yvanhuele.github.io/images/k-means/four_blobs.png" style="max-width:100%" /></p>
-<p>We might start by noting that the points in the top-left cluster are distinguished from the rest by the property that <span class="math">\(x &lt; 0\)</span> and <span class="math">\(y &gt; 6\)</span>. Similar methods work for the bottom-right cluster, but the <span class="math">\(x\)</span>- and <span class="math">\(y\)</span>-coordinates of the two other clusters overlap.</p>
-<p>Thus, we turn to unsupervised learning techniques such as K-means clustering to discover structure in our data.</p>
-<h2>An Application</h2>
-<p>A common application of clustering techniques is <a href="https://en.wikipedia.org/wiki/Market_segmentation">market segmentation</a>. If an online shopping site has access to information about its customers such as browsing history, purchasing history, age, geographic location, it can be useful to separate its customer base into different subgroups. The purpose of clustering can simply be descriptive — to get an idea of the customer base. For example, suppose the site's customers are predominantly either college students in New England or retirees in Arizona. Looking at the average customer over the whole data set is not very helpful since, in reality, the site has few middle aged customers from Missouri. On the other hand, if the site's customers are first split into two subgroups, the average attributes of each subgroup would be more enligtening. Clustering can also be used to help in supervised learning problems. The site is unlikely to have a huge amount of purchasing data for every single one of its customers. By grouping together similar customers, the site can leverage a lot more data to determine which products a given customer is likely to buy and can target its advertisements accordingly.</p>
-<p>Some other applications of K-means are listed <a href="https://en.wikipedia.org/wiki/K-means_clustering#Applications">here</a>.</p>
-<h2>An Example: Handwritten Digits</h2>
-<p>We're going to illustrate the power of K-means through a toy problem, by looking at images of handwritten digits. Specifically, we'll work with the test set of the <a href="http://archive.ics.uci.edu/ml/datasets/optical+recognition+of+handwritten+digits">UCI ML Optical Recognition of Handwritten Digits Data Set</a> which is included in the <a href="http://scikit-learn.org/stable/datasets/index.html">scikit-learn datasets package</a>. This data set consists of 1797 samples, each corresponding to the pixel intensities of an 8 by 8 pixel grayscale image of a handwritten digit. A few example images are shown below (reconstructed from 8x8 numeric arrays of pixel intensities):</p>
-<p align="center"><img alt="Examples of handwritten digits from the dataset" src="https://yvanhuele.github.io/images/k-means/example_digits.png" style="max-width:100%" /></p>
-<p><strong>Toy Problem:</strong> <em>Separate the digits into 3 groups of digits having similar shapes (or, more precisely, similar pixel intensity values).</em></p>
-<p>We already have a good system for separating these digits into 10 classes (i.e., by digit), but it's not quite as clear how to separate them into just 3 classes. To try and solve this problem, we can apply K-means clustering with <span class="math">\(K = 3\)</span>, and look at some of the digits that made it into each cluster.</p>
-<p align="center"><img alt="Digits separated into three clusters" src="https://yvanhuele.github.io/images/k-means/digit_clusters.png" style="max-width:100%" /></p>
-<p>Without knowing anything about digits, the algorithm has nonetheless picked up on similarities. For example, the last cluster seems to contain most of the 0s, 4s, and 6s.</p>
-<p>For a more rigorous analysis, consider the following table which records how many instances of each digit made it into each cluster.</p>
+<p>tags: <a href="https://yvanhuele.github.io/tag/style-transfer.html">style transfer</a> </p>
+</footer><!-- /.post-info --><h2>Style Transfer</h2>
+<p>Recently, I've been having a lot of fun playing with <a href="https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/15_Style_Transfer.ipynb">this TensorFlow tutorial</a> on style transfer by <a href="http://www.hvass-labs.org/">Magnus Erik Hvass Pedersen</a> based off of the paper <a href="https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Gatys_Image_Style_Transfer_CVPR_2016_paper.pdf"><em>Image Style Transfer Using Convolutional Neural Networks</em></a> by Gatys, Ecker, and Bethge. The basic goal in style transfer is to take an image and redraw it in the artistic style of a separate image. The final result should match the content of the first image and the style of the second.</p>
+<p>For example, using the tutorial to combine a photograph of Delicate Arch with the style of <a href="https://en.wikipedia.org/wiki/The_Hunters_in_the_Snow">Bruegel's Jagers in de Sneeuw</a>, I obtained the following image:</p>
+<p align="center"><img align="center" alt="Delicate Arch in the style of juice from pitted cherries running down a wooden table" src="https://yvanhuele.github.io/images/style-transfer/arch+bruegel_jagers_full.png" style="max-width:90%" /></p>
+<p>Gatys, Ecker, and Bethge's suggested using a deep convolutional neural network to define both the content and the style of an image. The convolutional filters identify different features of an image: colors, corners, and edges in the early layers and more complicated features built from these in the later layers. Gatys, Ecker, and Bethge's idea was that these feature activations can be used to capture both content and style. </p>
+<p>The main goal of this post is to work towards a better understanding of what this algorithm is doing, especially what is meant by style and how it is captured. We'll approach this from a few different angles. In particular, we'll generate a few "pure style" images starting from photographs with strong stylistic features in order to get an idea of what does and what does not count towards style. All of the generated style images, along with the images they were based upon, can be found in the <a href="https://github.com/yvanhuele/yvanhuele.github.io/tree/extra-blog-materials/exploring-style">blog materials Github repository</a> (along with a few examples that didn't make it into this blog post).</p>
+<p>If you want to play with style transfer yourself but don't want to work directly with neural networks, you can make use of the algorithm in black-box fashion with <a href="https://deepart.io/">DeepArt</a>.</p>
+<h2>What is Content?</h2>
+<p>Capturing content is fairly straightforward: if you can generate an image having the same feature activations as the original content image — that is, the images display the same shapes in the same locations — your two images should have similar content. Of course, if we match all of the feature activations perfectly, we risk reconstructing the content image too closely, thus defeating the purpose of style transfer. So we need to decide which layers of the convolutional network to use for content.</p>
+<p>One way to get an idea of what structure is captured by each layer of the network is to perform style transfer without a style image. That is, start with a white noise image and try and try to reconstruct our content image using only specific layers.</p>
+<p align="center"><img align="center" alt="Left: white noise; Right: image of Delicate Arch we wish to generate" src="https://yvanhuele.github.io/images/style-transfer/noise_to_arch.png" style="max-width:90%" /></p>
+<p>A perfect reconstruction would take the image on the left as input and produce the image on the right as output.</p>
+<p>We're working with the VGG-16 convolutional neural network described in <a href="https://arxiv.org/abs/1409.1556">this paper</a>. The network contains 13 convolutional layers using small (3x3) convolutional filters. Let's see what we get when we use different layers in the network for the content:</p>
+<p align="center"><img align="center" alt="Images of Delicate Arch generated using the different odd layers 1, 3, 5, ..., 13 as the content layer" src="https://yvanhuele.github.io/images/style-transfer/content_layers_arch.png" style="max-width:90%" /></p>
+<p>Matching the features at the first layer reproduces the image almost perfectly. By the thirteenth layer, the arch is almost unrecognizable. As we increase the layer we're working with, the colors match less and less and the edges become less sharp.</p>
+<p>Note that, when working with the earlier layers, we're not explicitly matching the complex features. Instead we get them for free by matching the smaller building blocks: if you know that you have two eyes sitting above a nose and a mouth, it's quite likely that you have a face.  </p>
+<h2>What is Style?</h2>
+<p>It might be tempting to try and capture style in the exact same way we did for content: try to match the features in the lower levels of the network to the style image. But we saw that matching the features in the low levels automatically matches the features in the high levels as well and we don't want to overwrite the content information. Furthermore, the feature activations themselves carry information about location and it's reasonable to expect style to be a global property of the image. Gatys, Ecker, and Bethge's idea was to not directly match the feature activations, but instead try to match some of their statistical properties. The tool they use for this is the <a href="https://en.wikipedia.org/wiki/Gramian_matrix">Gram matrix</a>.</p>
+<p>So what stylistic elements are captured by Gram matrices?</p>
+<p>We're going to explore this question both quantitatively and qualitatively. We'll begin with a highly simplified example — 2x2 black and white images — and work directly with Gram matrices to understand how they relate to style. Later on we'll use style transfer to generate images with style and no content. By comparing the original style images to the generated images, we can get a feeling as to what is counted as style when using the VGG-16 network.</p>
+<p>Put another way, we'll start with some math and then celebrate with some fun pictures.</p>
+<h4>Gram Matrix Definition</h4>
+<p>The Gram matrix of a set of vectors <span class="math">\(v_1, v_2, \ldots, v_n\)</span> is the matrix whose <span class="math">\((i,j)\)</span>-th entry consists of the dot product of <span class="math">\(v_i\)</span> with <span class="math">\(v_j\)</span>. If we let <span class="math">\(V\)</span> denote the matrix whose <span class="math">\(j\)</span>-th column is <span class="math">\(v_j\)</span>, so <span class="math">\(V = [v_1 \; v_2 \; \cdots \; v_n]\)</span>, then the Gram matrix of these vectors can be represented as the product <span class="math">\(V^T V\)</span>.</p>
+<p>The Gram matrix is related to the covariance matrix: If the vectors are centered random variables (each entry of a fixed vector is drawn from the a common distribution with mean 0), then the Gram matrix is proportional to the sample covariance matrix. If the vectors are not centered, then the Gram matrix seems to capture a mix of information about both the means and the covariances.</p>
+<p>In both cases, the Gram matrix can be thought of as delocalizing the feature activation information. The Gram matrix captures some information about the feature activations, but it doesn't know in which part of the image these features are activated.</p>
+<h3>A Spherical Cow</h3>
+<p><img align="right" alt="2x2 image with white in top left corner and black everywhere else" src="https://yvanhuele.github.io/images/style-transfer/simple2x2.png" style="max-width:90%; margin:2%" /></p>
+<p>Let's work with a toy example. Like all <a href="https://en.wikipedia.org/wiki/Spherical_cow">spherical cows</a>, it has its limitations, but is a good place to start. Suppose we are working with 2x2 black and white images. We'll represent the intensity of each pixel on a scale from 0 (black) to 1 (white). We'll apply to each image a single 1x1 convolutional filter corresponding to the identity: it takes the pixel intensity as input and returns the same value as the output.</p>
+<p>For example, if we take the sample image on the right, the feature activations form the vector <span class="math">\(v = [1, 0, 0, 0]\)</span>. In this case, the Gram matrix has a single entry which is the dot product of this vector with itself:</p>
 <div class="math">$$
-\begin{array}{r|rrrrrrrrrr}
- &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 &amp; 9 \\ \hline
-1 &amp; 2 &amp; 38 &amp; 161 &amp; 167 &amp; 0 &amp; 72 &amp; 1 &amp; 0 &amp; 65 &amp; 146 \\
-2 &amp; 0 &amp; 140 &amp; 16 &amp; 16 &amp; 55 &amp; 97 &amp; 1 &amp; 179 &amp; 108 &amp; 34 \\
-3 &amp; 176 &amp; 4 &amp; 0 &amp; 0 &amp; 126 &amp; 13 &amp; 179 &amp; 0 &amp; 1 &amp; 0 \\
-\end{array}
+1^2 + 0^2 + 0^2 + 0^2 = 1
 $$</div>
-<p>We see that cluster 1 contains most of the 2s, 3s, and 9s, that cluster 2 contains most of the 1s and 7s, and cluster 3 contains most of the 0s, 4s, and 6s and that the 5s and 8s are mostly split between clusters 1 and 2. Another way to see how the clusters split up the data is to use <a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal component analysis</a> (PCA), a method for representing high-dimensional data in 2-dimensions in such a way as to preserve as much spread as possible.</p>
-<p align="center"><img alt="Clustered digits plotted with the first 2 principal components" src="https://yvanhuele.github.io/images/k-means/digits_pca.png" style="max-width:100%" /></p>
-<h2>Restrictions</h2>
-<p>K-means clustering cannot be applied to all data sets, and even when it can be applied, it may not give great results:</p>
-<ul>
-<li>First, the <strong>data must be numerical</strong>: we need to be able to compute distances between data points and to average data points. There are alternative clustering methods that can deal with categorical or mixed data types, such as K-modes or K-medoids with the <a href="https://stats.stackexchange.com/a/15313">Gower metric</a>.</li>
-<li><strong>The number of clusters K must be set in advance.</strong> That is, K-means clustering cannot pick the number of clusters for you. We'll talk about this more in the next section.</li>
-<li>The goal of K-means is to minimize the distances between points in the same cluster. This captures a specific type of structure, but fails to capture other patterns, and <strong>there are numerical data sets that are not well-suited to K-means</strong>. We'll discuss this in more detail in a later blog post.</li>
-</ul>
-<h2>What is K?</h2>
-<p>The number of clusters, K, is a hyperparameter that must be set in advance. Often, K is chosen using domain expertise. You can also often get an idea for the number of clusters through plotting and data exploration.</p>
-<p>Let's explore this further using a real-world data set: <a href="https://en.wikipedia.org/wiki/Iris_flower_data_set">Fisher's Iris dataset</a>. The Iris data set one of many included in <a href="http://scikit-learn.org/stable/datasets/index.html">scikit-learn's datasets package</a>. The Iris data set contains 150 sets of measurements for 3 different species of Iris (50 samples from each species)</p>
-<p>One way to examine the data by plotting each variable against every other variable using a <a href="https://seaborn.pydata.org/generated/seaborn.pairplot.html">pairplot</a> from the seaborn library.</p>
-<p align="center"><img alt="Pair plot of Iris data without species labels" src="https://yvanhuele.github.io/images/k-means/iris_pairplot_unlabeled.png" style="max-width:100%" /></p>
-<p>Looking at these plots, we do indeed see some underlying structure. The five pair plots along with the histogram for petal length separate the data into two distinct groups. Recall though that there should be 3 different species of iris represented. What's going on?</p>
-<p>Since we have the luxury of knowing the individual labels (i.e. which iris species each point corresponds to), let's go ahead a look at these plots again after incorporating this information.</p>
-<p align="center"><img alt="Pair plot of Iris data with species labels" src="https://yvanhuele.github.io/images/k-means/iris_pairplot_labeled.png" style="max-width:100%" /></p>
-<p>We see that the data do indeed cluster into three groups, but that two of those just barely overlap.</p>
-<p>Another way of plotting high dimensional data is to use a dimensionality reduction technique such as PCA.  Below, the Iris data set is plotted using the first two principal components.</p>
-<p align="center"><img alt="Iris data plotted using 2 principal components" src="https://yvanhuele.github.io/images/k-means/iris_PCA.png" style="max-width:100%" /></p>
-<p>So, by exploring the data through visualizations and by using domain expertise, we have come up with two reasonable values of K, namely:</p>
-<ul>
-<li><span class="math">\(K = 2\)</span> seems most natural based on the various plots of the data.</li>
-<li><span class="math">\(K = 3\)</span> would be an obvious choice if you knew that the data set contained specimens from three different species, but didn't have the species labels included in the data.</li>
-</ul>
-<p>The results of performing K-means clustering with <span class="math">\(K = 2\)</span> and <span class="math">\(K = 3\)</span> are presented below.</p>
-<p align="center"><img alt="K-means clustering on Iris data with K = 2 and K = 3" src="https://yvanhuele.github.io/images/k-means/iris_clustering.png" style="max-width:100%" /></p>
-<p>Note that neither one of these solutions perfectly separates the data (either into the 3 distinct species or into setosa/non-setosa), but they come pretty close. </p>
-<p>In the absence of domain-expertise, there are a <a href="https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set">variety of methods</a> one can use to select the number of clusters.</p>
-<h2>A Look at the Algorithm</h2>
-<blockquote>
-<p><em>For a fine algorithm that gleans<br />
-Hidden groupings: two, four, maybe teens<br />
-Build centroid and label<br />
-Keep up 'til it's stable<br />
-That's a very rough draft of K-means</em></p>
-</blockquote>
-<p>K-means clustering is performed by iterating two steps:</p>
-<ol>
-<li>Use the cluster labels to recompute the <a href="https://en.wikipedia.org/wiki/Centroid">cluster centroids</a> (geometric centers).</li>
-<li>Use the cluster centroids to recompute the cluster labels.</li>
-</ol>
-<p>Each iteration of these steps reduces the within-cluster variation (i.e. readjusts the clusters so that they're more compact) and, eventually, the clusters will settle down to a stable configuration: neither the labels nor the centroids will change. A few steps of this process are illustrated in the figure below (using <span class="math">\(K = 4\)</span>):
-Let's wrap up this section with small warning: the number of clusters is an optional parameter in the scikit-learn <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html">KMeans</a> function. However, this implementation is not cleverly selecting the number of clusters based on properties of the data. Instead it's just using the fixed default value of 8 clusters.</p>
-<p align="center"><img alt="a few clustering steps" src="https://yvanhuele.github.io/images/k-means/clustering_process.png" style="max-width:100%" /></p>
-<p>On the far left, we start with cluster labels (represented by the colors) which we use to compute the centroids in the second figure which are denoted by stars. This illustrates step 1. Now, notice that the labels don't seem well matched to the centroids: for example, the blue point near (0, 5) is much closer to the red centroid than the blue one.</p>
-<p>So, going from the second figure to the third, we apply step 2 and relabel each data point so that it matches the nearest centroid. Now the labels give us better looking clusters, but the old centroids are no longer centrally located. The orange star in the third figure is too far to the right; the blue star is too low. We can fix this by applying step 1 again to get the figure on the far right.</p>
-<p>In this example, further repetition of these steps won't change anything: we've achieved a stable clustering. However, in general you might need to apply steps 1 and 2 many times before getting your final clusters (and we'll see examples of this later on).</p>
-<h2>What's Next?</h2>
-<p>You may have noticed a problem with the description of K-means clustering given above: To perform step 1, we need to already have cluster labels. We can get labels from step 2, but only if we already have cluster centroids. Thus, before iterating these steps, we need to either initialize labels or initialize centroids.</p>
-<p>There are various methods for initializing the labels or the centroids. The reason you might want to consider different initialization techniques is because, even though K-means is guaranteed to converge to a stable clustering, the clustering might not be optimal. That is, different initializations can lead to different outcomes. To avoid having to restart too many times, we want initialize in a clever way. In part 2 of this series, we'll discuss several initialization methods and discuss the importance of multiple random initializations in more detail.</p>
+<p>Images with the same gram matrix can be represented by matrices <span class="math">\(A = (a_{ij})\)</span> satisfying</p>
+<div class="math">$$
+a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
+$$</div>
+<p>Here are some examples of images satisfying this property:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram.png" style="max-width:90%" /></p>
+<p>Both the mean and the variance of the pixel intensities vary from one image to the next with a sort of trade-off: as the mean intensity increases, the variance decreases.</p>
+<p>Covariance matrices are more familiar objects and more easily interpretable so let's see what we get when if we center the activations before computing the Gram matrix. The mean value of the coordinates of <span class="math">\(v = [1, 0, 0, 0]\)</span> is <span class="math">\(1/4\)</span>. Subtracting, we get the vector <span class="math">\(w = [3/4, -1/4, -1/4, -1/4]\)</span> and the dot product of <span class="math">\(w\)</span> with itself is</p>
+<div class="math">$$
+\left(\frac{3}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 + \left(-\frac{1}{4}\right)^2 = \frac{3}{4}
+$$</div>
+<p>For lack of a better term, we'll call this the <em>centered Gram matrix</em>.</p>
+<p>Each image with the same centered Gram matrix can be represented by a matrix of pixel intensities <span class="math">\(A\)</span> satisfying</p>
+<div class="math">$$
+(a_{11} - \bar{a})^2 + (a_{12} - \bar{a})^2 + (a_{21} - \bar{a})^2 + (a_{22} - \bar{a})^2 = \frac{3}{4}
+$$</div>
+<p>where <span class="math">\(\bar{a}\)</span> is the mean of the entries:</p>
+<div class="math">$$
+\bar{a} = \frac{a_{11} + a_{12} + a_{21} + a_{22}}{4}
+$$</div>
+<p>Here are some examples of images with this property:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_centered.png" style="max-width:90%" /></p>
+<p>The pixel intensities of these images all have the same fixed variance of 3/4. However, the mean intensities do vary from one image to the next. So, for example, one could add or subtract 0.05 to each of the intensities in the third matrix without altering the centered Gram matrix.</p>
+<p>The Gram matrix and centered Gram matrix give different results. Which represents style better? It's difficult to say, especially with our constrained example. What happens if we impose both constraints? That is, what do we get if we require both the Gram matrix and the centered Gram matrix to match those of the original image?</p>
+<p>It turns out this is the same as fixing both the variance of the activations (and thus pixel intensities) and the activation means. We already know that the constraint on the centered Gram matrix fixes the variance. Recall that</p>
+<div class="math">$$
+\sum_{i,j} (a_{ij} - \bar{a})^2 = \sum_{i,j} a_{ij}^2 - 2 \bar{a} \sum_{i,j} a_{ij} + \sum_{i,j} \bar{a}^2 = \sum_{i,j} a_{ij}^2 - 4 \bar{a}^2
+$$</div>
+<p>Using our constraints on the Gram matrix and centered Gram matrix, this reduces to
+</p>
+<div class="math">$$
+\frac{3}{4} = 1 - 4 \bar{a}^2 \;\;\; \text{or} \;\;\; \bar{a}^2 = \frac{1}{16}
+$$</div>
+<p>Because each of the <span class="math">\(a_{ij}\)</span> is nonnegative, it follows that <span class="math">\(\bar{a} = 1/4\)</span> or, equivalently, that the sum of the four activations is <span class="math">\(1\)</span>. It turns out that there are exactly four images satisfying these properties. To see this, consider our constraints:</p>
+<div class="math">$$
+\sum_{i, j} a_{ij}^2 = a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
+$$</div>
+<div class="math">$$
+\sum_{i, j} a_{ij} =  a_{11} + a_{12}  + a_{21} + a_{22} = 1
+$$</div>
+<p>
+and note that
+</p>
+<div class="math">$$
+\left(\sum_{i, j} a_{ij} \right)^2 = \sum_{ij} a_{ij}^2 + 2 \left( \sum_{(i,j) \neq (k, \ell)} a_{ij} a_{k\ell} \right)
+$$</div>
+<p>
+Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each of the cross terms <span class="math">\(a_{ij} a_{k\ell}\)</span> is zero and, therefore, that at most one of the <span class="math">\(a_{ij}\)</span> is nonzero. The four images sharing these constraints are given below:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices and centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram_and_centered.png" style="max-width:90%" /></p>
+<p>To me, these appear to have the same style.</p>
+<h4>Further Exploration</h4>
+<p>I hope the example above was illuminating. We should be wary of drawing too strong of conclusions from such a simple example, but it seemed like a manageable place to start, and suggests some directions for further exploration. What if we work with 4x4 images and 2x2 filters? What if we use a different parametrization with black corresponding to -1 and use rectified linear activations? How should we measure the distance between styles when the Gram matrix is larger than 1x1?</p>
+<p>We won't pursue any of these ideas any further here. Instead I'll take the easy way out and leave their exploration as an exercise for the interested reader.</p>
+<h3>Visualizing Style</h3>
+<p>In the next part, we're going to try to understand style by using style transfer. Earlier, we tried generating Delicate Arch using a content image and no style. Now, we're going to generate images using only style and no content. The naming convention for the original images is a little haphazard (I didn't realize how far I would take this when I just got started and didn't feel like renaming them afterwards) but matches the file names in the <a href="https://github.com/yvanhuele/yvanhuele.github.io/tree/extra-blog-materials/exploring-style">Github repository</a>.</p>
+<h4>The More Rigid Style</h4>
+<p>To capture style, instead of using the Gram matrix by itself, we'll use both the Gram matrix and the centered Gram matrix. Despite the discussion above, this decision was based more on trial-and-error than on theory. While playing around with style transfer and trying to understand what was going on, I replaced the Gram matrix with the centered Gram matrix. Often this improved the patterns in the generated image but messed up the colors. After experimenting a little, I decided to try and incorporate both matrices into my algorithm and suddenly the styles I was generating seemed a lot more accurate. I'll try and demonstrate this with some examples below.</p>
+<p>(An aside: When performing style transfer, you may be less interested in generating the most stylistically accurate image than in generating an aesthetically pleasing one. In that case, I would recommend experimenting a bit with how you choose to measure style.)</p>
+<p>Let's begin with a simple example: what is the style of a dark circle on a light background? In the figure below, the image on the left was used as the style image. The three other images were generated to match its style using just the regular Gram matrix, just the centered Gram matrix, and both Gram matrices, respectively.</p>
+<p align="center"><img alt="Styles generated from a dark circle on a light background using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_circle.png" style="max-width:90%" /></p>
+<p>The image generated using the Gram matrix is mostly gray with a few concentration of light or dark points. The image generated using the centered Gram matrix does a better job of achieving the light and dark colors, but the balance is off: too many dark regions, not enough light regions. Using both matrices, we get a nice compromise: a good balance between light and dark, curved rather than straight edges, and mostly contiguous blobs.</p>
+<p>Let's look at some more examples.</p>
+<p>In some cases, the regular Gram matrix outperformed the centered Gram matrix. The colors are quite a bit off in the this muddy style generated using the centered matrix:</p>
+<p align="center"><img alt="Styles generated from mud1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_mud1.png" style="max-width:90%" /></p>
+<p>In other cases, the centered Gram matrix outperformed the regular Gram matrix. The regular Gram matrix failed to capture the purple color of some of these peppers:</p>
+<p align="center"><img alt="Styles generated from vegetables1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_vegetables1.png" style="max-width:90%" /></p>
+<p>And sometimes each captured different aspects of the style.</p>
+<p align="center"><img alt="Styles generated from pinecone1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_pinecone1.png" style="max-width:90%" /></p>
+<p>But in all cases, at least to my eye, the images generated using a combination of both the regular Gram matrix and the centered Gram matrix most accurately captured the style of the original image they were based on.</p>
+<p>To incorporate both Gram matrices, I modified the gram_matrix function in the tutorial. The modified function I used is presented below:</p>
+<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">gram_matrix</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+
+    <span class="c1"># Get the number of feature channels for the input tensor, </span>
+    <span class="c1"># which is assumed to be from a convolutional layer with 4-dim.</span>
+    <span class="n">num_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="c1"># Reshape the tensor so it is a 2-dim matrix. This essentially</span>
+    <span class="c1"># flattens the contents of each feature-channel.</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_channels</span><span class="p">])</span>
+
+    <span class="c1"># Subtract the mean activation value from each feature so that</span>
+    <span class="c1"># our Gram matrix is proportional to the covariance matrix</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">keepdims</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">centered_matrix</span> <span class="o">=</span> <span class="n">matrix</span> <span class="o">-</span> <span class="n">means</span>
+
+    <span class="c1"># Calculate the Gram-matrix as the matrix-product of</span>
+    <span class="c1"># the 2-dim matrix with itself. This calculates the</span>
+    <span class="c1"># dot-products of all combinations of the feature-channels.</span>
+    <span class="n">gram</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">matrix</span><span class="p">)</span>
+
+    <span class="c1"># Do the same with the centered matrix</span>
+    <span class="n">gram_centered</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">centered_matrix</span><span class="p">),</span> <span class="n">centered_matrix</span><span class="p">)</span>
+
+    <span class="c1"># Return both Gram matrices</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">gram</span><span class="p">,</span> <span class="n">gram_centered</span><span class="p">],</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>      
+</pre></div>
+
+
+<h4>Different Style Layers</h4>
+<p>Just like content, the style of an image is different depending on which layers are considered. Let's start by working with the first layer of the convolutional network and add layers one by one.</p>
+<p align="center"><img align="center" alt="Style images generated from plants1 using an increasing number of layers" src="https://yvanhuele.github.io/images/style-transfer/style_layers_plants1.png" style="max-width:90%" /></p>
+<p>Using only the first layer seems to produce the right colors, but not much else. Adding the second layer, larger patches of matching colors begin to appear. When the third layer is added, little flame-like shapes begin to appear and these get larger and more leaf-like when the fourth and fifth layers are added into the mix. After the fifth or sixth layer, things don't seem to change much. This might be an optimization problem — maybe if we used a more sophisticated optimization technique and let our algorithm run longer, we'd get a different result — or it could just be that the effect of the higher layers is too subtle to notice.</p>
+<p>Since we tend to associate style with low level features (e.g. colors and edges), it makes sense to set an upper bound on which layers to use for style and include all of the layers below that. The style images generated in the previous section and those that we'll look at in the next section used all 13 layers of the network when considering style. Just to get an idea about the stylistic contribution of each individual layer, let's see what happens if we work with the layers one at a time.</p>
+<p align="center"><img align="center" alt="Style images generated from plants1 using different individual layers" src="https://yvanhuele.github.io/images/style-transfer/style_layers_plants1bis.png" style="max-width:90%" /></p>
+<p>As we work with higher and higher layers, the patterns become more and more complex while the colors match those of the original image less and less.</p>
+<h2>Fashion Show</h2>
+<p>Now that we've decided how we're measuring style (using both the Gram matrix and centered Gram matrix for the feature activations from all 13 convolutional layers), we can try and understand style by looking at examples.</p>
+<h4>Contrived</h4>
+<p>Let's begin with some simple, contrived examples.</p>
+<p align="center"><img alt="Style images generated from simple geometric patterns" src="https://yvanhuele.github.io/images/style-transfer/artificial_styles.png" style="max-width:90%" /></p>
+<p>The halves style image is mostly separated into large light and dark patches with long straight edges on the boundaries. With the checkers style, we get sharp corners, lots of straight vertical and horizontal edges, and a good balance of red and black. With the rainbow circles style, most of the edges are curved and the ordering of the colors is preserved (e.g. red patches are nested between orange and purple). The <a href="https://www.lipsum.com/">lorem ipsum</a> style doesn't contain any identifiable characters and the neat line spacing has been lost, but still displays many text-like properties.</p>
+<h4>Mostly Style</h4>
+<p>One way to understand style is to identify images that seem to be mostly style. Below are some examples where the generated style images closely resemble the images they're based on.</p>
+<p align="center"><img alt="Styles that closely match the original image: algae1, barnacles2, cactus1, and cherry1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles1.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: fall_leaves1, flower5, moss1, and mud4" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles2.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: needles1, petroglyphs1, rock1, and stones1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles3.png" style="max-width:90%" /></p>
+<p>We did lose a little bit of content (e.g. the crack between the barnacle covered rocks), but for the most part, the generated images could fill in for the originals if one doesn't look too closely. I think images generated using the style of mud 4 and rock 1 are particularly convincing.</p>
+<h4>Not Just Style</h4>
+<p>Conversely, we can look at images that have content in addition to style. You'd be unlikely to confuse the original images below with their associated generated style images.</p>
+<p align="center"><img alt="Styles that don't closely match the original image: bighorn1, butterfly2, cactus3, redrock6" src="https://yvanhuele.github.io/images/style-transfer/content_styles1.png" style="max-width:90%" /></p>
+<p>Indeed, given only the generated images (those on the bottom row), you'd likely have a hard time determining what the original images (top row) might have been. It probably comes as no surprise that the photograph of the bighorn sheep is more than just style. Nevertheless, it's good to confirm our definition of style isn't too broad.</p>
+<h4>Flowers</h4>
+<p>Images of flowers provide a good case study of the balance between style and content. Even though they display many strong stylistic elements, individual flowers tend to contain more content (the arrangement of the petals and leaves, the position of the flower relative to the background), while images containing many of the same type of flowers together (flower 5 above and flower 17 below) are closer to pure style.</p>
+<p align="center"><img alt="Styles for flower images 1, 4, 7, and 8" src="https://yvanhuele.github.io/images/style-transfer/flower_styles1.png" style="max-width:90%" />
+<img alt="Styles for flower images 10, 12, 13, and 17" src="https://yvanhuele.github.io/images/style-transfer/flower_styles2.png" style="max-width:90%" /></p>
+<p>The flower images also highlight a common pattern of our algorithm: often the generated image pushes the bright color of the flower to the border of the image (e.g. flowers 7, 8, 10, and 12).</p>
+<h4>Surprises</h4>
+<p>Though I couldn't perfectly predict the appearance of the generated style images in advance, I found most of the results unsurprising. There were a few, however, that caught me off guard.</p>
+<p align="center"><img alt="Styles from images with either more or less content than I expected: forest1, lilypad1, redrock2" src="https://yvanhuele.github.io/images/style-transfer/surprise_styles1.png" style="max-width:67.5%" /></p>
+<p>It seems the forest 1 and redrock 2 images contained more content than I thought. I was expecting to see straight dark tree trunks in the generated forest canopy. And I hadn't considered how important the location of the shadows is in the red rock image. The lilypad 1 image, on the other hand, seems to be less content and more style than I initially expected. In particular, the flowers in the generated image seem quite plausible.</p>
+<h4>Rogues Gallery</h4>
+<p>Thanks for reading! I hope that these examples have shed some light on what elements are treated as style for the purposes of style transfer (at least for the VGG-16 network). I had a lot of fun generating these images and I'll leave you with a few of my personal favorites:</p>
+<p align="center"><img alt="Original image and generated style for aspen1, books1, bridge1, and cat2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles1.png" style="max-width:90%" />
+<img alt="Original image and generated style for flamingo1, flower15, gasworks1, and lichen2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles2.png" style="max-width:90%" />
+<img alt="Original image and generated style for lilypad1, pie1, spiderweb1, and yucca2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles3.png" style="max-width:90%" /></p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
         indent = "0em",
@@ -171,6 +258,35 @@ Let's wrap up this section with small warning: the number of clusters is an opti
 }
 </script>                </article>
             </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="https://yvanhuele.github.io/k-means-clustering-part-1.html" rel="bookmark"
+                           title="Permalink to K-Means Clustering Part 1">K-Means Clustering Part 1</a></h1>
+                </header>
+
+                <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2018-02-18T18:00:00-07:00">
+                Published: Sun 18 February 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://yvanhuele.github.io/author/yannick.html">Yannick</a>
+        </address>
+<p>In <a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a>.</p>
+<p>tags: <a href="https://yvanhuele.github.io/tag/clustering.html">clustering</a> <a href="https://yvanhuele.github.io/tag/k-means.html">k-means</a> </p>
+</footer><!-- /.post-info -->                <h2>Just Another Review of K-Means</h2>
+<p>K-means clustering is a well-known algorithm for which there already exist many good online resources. My first introduction to K-means (as was the case with many other machine learning techniques) was from the textbook <a href="http://www-bcf.usc.edu/~gareth/ISL/"><em>Introduction to Statistical Learning</em></a>. However, a recent experience caused me to …</p>
+                <a class="readmore" href="https://yvanhuele.github.io/k-means-clustering-part-1.html">read more</a>
+                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="social">
                         <h2>social</h2>

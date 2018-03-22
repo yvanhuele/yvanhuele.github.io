@@ -2,8 +2,9 @@
 <html lang="english">
 <head>
         <meta charset="utf-8" />
-        <title>Salientia Stuff - style-transfer</title>
-        <link rel="stylesheet" href="/theme/css/main.css" />
+        <title>Salientia Stuff - style transfer</title>
+        <link rel="stylesheet" href="https://yvanhuele.github.io/theme/css/main.css" />
+        <link href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Salientia Stuff Atom Feed" />
 
         <!--[if IE]>
             <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -12,50 +13,55 @@
 
 <body id="index" class="home">
         <header id="banner" class="body">
-                <h1><a href="/">Salientia Stuff </a></h1>
+                <h1><a href="https://yvanhuele.github.io/">Salientia Stuff </a></h1>
                 <nav><ul>
-                    <li><a href="/pages/about.html">About</a></li>
-                    <li><a href="/category/data-science.html">Data Science</a></li>
-                    <li><a href="/category/word-of-the-week.html">Word of the Week</a></li>
+                    <li><a href="https://yvanhuele.github.io/pages/about.html">About</a></li>
+                    <li><a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a></li>
+                    <li><a href="https://yvanhuele.github.io/category/word-of-the-week.html">Word of the Week</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="/exploring-style.html">Exploring Style</a></h1>
+                    <h1 class="entry-title"><a href="https://yvanhuele.github.io/exploring-style.html">Exploring Style</a></h1>
 <footer class="post-info">
-        <abbr class="published" title="2018-03-09T20:00:00-07:00">
-                Published: Fri 09 March 2018
+        <abbr class="published" title="2018-03-21T23:50:00-06:00">
+                Published: Wed 21 March 2018
         </abbr>
 
         <address class="vcard author">
-                By                         <a class="url fn" href="/author/yannick.html">Yannick</a>
+                By                         <a class="url fn" href="https://yvanhuele.github.io/author/yannick.html">Yannick</a>
         </address>
-<p>In <a href="/category/data-science.html">Data Science</a>.</p>
-<p>tags: <a href="/tag/style-transfer.html">style-transfer</a> </p>
-</footer><!-- /.post-info --><p>Recently, I've been having a lot of fun playing with <a href="https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/15_Style_Transfer.ipynb">this TensorFlow tutorial</a> on style transfer by <a href="http://www.hvass-labs.org/">Magnus Erik Hvass Pedersen</a> based off of the paper <a href="https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Gatys_Image_Style_Transfer_CVPR_2016_paper.pdf"><em>Image Style Transfer Using Convolutional Neural Networks</em></a> by Gatys, Ecker, and Bethge. The basic goal in style transfer is to take a photograph and redraw it in a particular artistic style such as that of van Gogh's <em>The Starry Night</em>. The final result should match the content of the first image and the style of the second.</p>
+<p>In <a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a>.</p>
+<p>tags: <a href="https://yvanhuele.github.io/tag/style-transfer.html">style transfer</a> </p>
+</footer><!-- /.post-info --><h2>Style Transfer</h2>
+<p>Recently, I've been having a lot of fun playing with <a href="https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/15_Style_Transfer.ipynb">this TensorFlow tutorial</a> on style transfer by <a href="http://www.hvass-labs.org/">Magnus Erik Hvass Pedersen</a> based off of the paper <a href="https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Gatys_Image_Style_Transfer_CVPR_2016_paper.pdf"><em>Image Style Transfer Using Convolutional Neural Networks</em></a> by Gatys, Ecker, and Bethge. The basic goal in style transfer is to take an image and redraw it in the artistic style of a separate image. The final result should match the content of the first image and the style of the second.</p>
 <p>For example, using the tutorial to combine a photograph of Delicate Arch with the style of <a href="https://en.wikipedia.org/wiki/The_Hunters_in_the_Snow">Bruegel's Jagers in de Sneeuw</a>, I obtained the following image:</p>
-<p align="center"><img align="center" alt="Delicate Arch in the style of juice from pitted cherries running down a wooden table" src="/images/style-transfer/arch+bruegel_jagers_full.png" style="max-width:90%" /></p>
+<p align="center"><img align="center" alt="Delicate Arch in the style of juice from pitted cherries running down a wooden table" src="https://yvanhuele.github.io/images/style-transfer/arch+bruegel_jagers_full.png" style="max-width:90%" /></p>
 <p>Gatys, Ecker, and Bethge's suggested using a deep convolutional neural network to define both the content and the style of an image. The convolutional filters identify different features of an image: colors, corners, and edges in the early layers and more complicated features built from these in the later layers. Gatys, Ecker, and Bethge's idea was that these feature activations can be used to capture both content and style. </p>
+<p>The main goal of this post is to work towards a better understanding of what this algorithm is doing, especially what is meant by style and how it is captured. We'll approach this from a few different angles. In particular, we'll generate a few "pure style" images starting from photographs with strong stylistic features in order to get an idea of what does and what does not count towards style. All of the generated style images, along with the images they were based upon, can be found in the <a href="https://github.com/yvanhuele/yvanhuele.github.io/tree/extra-blog-materials/exploring-style">blog materials Github repository</a> (along with a few examples that didn't make it into this blog post).</p>
 <p>If you want to play with style transfer yourself but don't want to work directly with neural networks, you can make use of the algorithm in black-box fashion with <a href="https://deepart.io/">DeepArt</a>.</p>
 <h2>What is Content?</h2>
 <p>Capturing content is fairly straightforward: if you can generate an image having the same feature activations as the original content image — that is, the images display the same shapes in the same locations — your two images should have similar content. Of course, if we match all of the feature activations perfectly, we risk reconstructing the content image too closely, thus defeating the purpose of style transfer. So we need to decide which layers of the convolutional network to use for content.</p>
 <p>One way to get an idea of what structure is captured by each layer of the network is to perform style transfer without a style image. That is, start with a white noise image and try and try to reconstruct our content image using only specific layers.</p>
-<p align="center"><img align="center" alt="Left: white noise; Right: image of Delicate Arch we wish to generate" src="/images/style-transfer/noise_to_arch.png" style="max-width:90%" /></p>
+<p align="center"><img align="center" alt="Left: white noise; Right: image of Delicate Arch we wish to generate" src="https://yvanhuele.github.io/images/style-transfer/noise_to_arch.png" style="max-width:90%" /></p>
 <p>A perfect reconstruction would take the image on the left as input and produce the image on the right as output.</p>
 <p>We're working with the VGG-16 convolutional neural network described in <a href="https://arxiv.org/abs/1409.1556">this paper</a>. The network contains 13 convolutional layers using small (3x3) convolutional filters. Let's see what we get when we use different layers in the network for the content:</p>
-<p align="center"><img align="center" alt="Images of Delicate Arch generated using the different odd layers 1, 3, 5, ..., 13 as the content layer" src="/images/style-transfer/content_layers_arch.png" style="max-width:90%" /></p>
+<p align="center"><img align="center" alt="Images of Delicate Arch generated using the different odd layers 1, 3, 5, ..., 13 as the content layer" src="https://yvanhuele.github.io/images/style-transfer/content_layers_arch.png" style="max-width:90%" /></p>
 <p>Matching the features at the first layer reproduces the image almost perfectly. By the thirteenth layer, the arch is almost unrecognizable. As we increase the layer we're working with, the colors match less and less and the edges become less sharp.</p>
 <p>Note that, when working with the earlier layers, we're not explicitly matching the complex features. Instead we get them for free by matching the smaller building blocks: if you know that you have two eyes sitting above a nose and a mouth, it's quite likely that you have a face.  </p>
 <h2>What is Style?</h2>
-<p>It might be tempting to try and capture style in the exact same way we did for content: try to match the features in the lower levels of the network to the style image. But we saw that matching the features in the low levels automatically matches the features in the high levels as well and we don't want to override the content. Furthermore, the feature activations themselves carry information about location and it's reasonable to expect style to be a global property of the image. Gatys, Ecker, and Bethge's idea was to not directly match the feature activations, but instead try to match some of their statistical properties. The tool they use for this is the <a href="https://en.wikipedia.org/wiki/Gramian_matrix">Gram matrix</a>. So what stylistic elements are captured by Gram matrices?</p>
+<p>It might be tempting to try and capture style in the exact same way we did for content: try to match the features in the lower levels of the network to the style image. But we saw that matching the features in the low levels automatically matches the features in the high levels as well and we don't want to overwrite the content information. Furthermore, the feature activations themselves carry information about location and it's reasonable to expect style to be a global property of the image. Gatys, Ecker, and Bethge's idea was to not directly match the feature activations, but instead try to match some of their statistical properties. The tool they use for this is the <a href="https://en.wikipedia.org/wiki/Gramian_matrix">Gram matrix</a>.</p>
+<p>So what stylistic elements are captured by Gram matrices?</p>
 <p>We're going to explore this question both quantitatively and qualitatively. We'll begin with a highly simplified example — 2x2 black and white images — and work directly with Gram matrices to understand how they relate to style. Later on we'll use style transfer to generate images with style and no content. By comparing the original style images to the generated images, we can get a feeling as to what is counted as style when using the VGG-16 network.</p>
+<p>Put another way, we'll start with some math and then celebrate with some fun pictures.</p>
 <h4>Gram Matrix Definition</h4>
 <p>The Gram matrix of a set of vectors <span class="math">\(v_1, v_2, \ldots, v_n\)</span> is the matrix whose <span class="math">\((i,j)\)</span>-th entry consists of the dot product of <span class="math">\(v_i\)</span> with <span class="math">\(v_j\)</span>. If we let <span class="math">\(V\)</span> denote the matrix whose <span class="math">\(j\)</span>-th column is <span class="math">\(v_j\)</span>, so <span class="math">\(V = [v_1 \; v_2 \; \cdots \; v_n]\)</span>, then the Gram matrix of these vectors can be represented as the product <span class="math">\(V^T V\)</span>.</p>
 <p>The Gram matrix is related to the covariance matrix: If the vectors are centered random variables (each entry of a fixed vector is drawn from the a common distribution with mean 0), then the Gram matrix is proportional to the sample covariance matrix. If the vectors are not centered, then the Gram matrix seems to capture a mix of information about both the means and the covariances.</p>
-<h4>A Spherical Cow</h4>
-<p><img align="right" alt="2x2 image with white in top left corner and black everywhere else" src="/images/style-transfer/simple2x2.png" style="max-width:90%; margin:2%" /></p>
-<p>Let's work with a toy example. Suppose we are working with 2x2 black and white images. We'll represent the intensity of each pixel on a scale from 0 (black) to 1 (white). We'll apply to each image a single 1x1 convolutional filter corresponding to the identity: it takes the pixel intensity as input and returns the same value as the output.</p>
+<p>In both cases, the Gram matrix can be thought of as delocalizing the feature activation information. The Gram matrix captures some information about the feature activations, but it doesn't know in which part of the image these features are activated.</p>
+<h3>A Spherical Cow</h3>
+<p><img align="right" alt="2x2 image with white in top left corner and black everywhere else" src="https://yvanhuele.github.io/images/style-transfer/simple2x2.png" style="max-width:90%; margin:2%" /></p>
+<p>Let's work with a toy example. Like all <a href="https://en.wikipedia.org/wiki/Spherical_cow">spherical cows</a>, it has its limitations, but is a good place to start. Suppose we are working with 2x2 black and white images. We'll represent the intensity of each pixel on a scale from 0 (black) to 1 (white). We'll apply to each image a single 1x1 convolutional filter corresponding to the identity: it takes the pixel intensity as input and returns the same value as the output.</p>
 <p>For example, if we take the sample image on the right, the feature activations form the vector <span class="math">\(v = [1, 0, 0, 0]\)</span>. In this case, the Gram matrix has a single entry which is the dot product of this vector with itself:</p>
 <div class="math">$$
 1^2 + 0^2 + 0^2 + 0^2 = 1
@@ -65,7 +71,7 @@ $$</div>
 a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
 $$</div>
 <p>Here are some examples of images satisfying this property:</p>
-<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices" src="/images/style-transfer/same_gram.png" style="max-width:90%" /></p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram.png" style="max-width:90%" /></p>
 <p>Both the mean and the variance of the pixel intensities vary from one image to the next with a sort of trade-off: as the mean intensity increases, the variance decreases.</p>
 <p>Covariance matrices are more familiar objects and more easily interpretable so let's see what we get when if we center the activations before computing the Gram matrix. The mean value of the coordinates of <span class="math">\(v = [1, 0, 0, 0]\)</span> is <span class="math">\(1/4\)</span>. Subtracting, we get the vector <span class="math">\(w = [3/4, -1/4, -1/4, -1/4]\)</span> and the dot product of <span class="math">\(w\)</span> with itself is</p>
 <div class="math">$$
@@ -81,9 +87,19 @@ $$</div>
 \bar{a} = \frac{a_{11} + a_{12} + a_{21} + a_{22}}{4}
 $$</div>
 <p>Here are some examples of images with this property:</p>
-<p align="center"><img align="center" alt="2x2 black and white images with the same centered Gram matrices" src="/images/style-transfer/same_centered.png" style="max-width:90%" /></p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_centered.png" style="max-width:90%" /></p>
 <p>The pixel intensities of these images all have the same fixed variance of 3/4. However, the mean intensities do vary from one image to the next. So, for example, one could add or subtract 0.05 to each of the intensities in the third matrix without altering the centered Gram matrix.</p>
 <p>The Gram matrix and centered Gram matrix give different results. Which represents style better? It's difficult to say, especially with our constrained example. What happens if we impose both constraints? That is, what do we get if we require both the Gram matrix and the centered Gram matrix to match those of the original image?</p>
+<p>It turns out this is the same as fixing both the variance of the activations (and thus pixel intensities) and the activation means. We already know that the constraint on the centered Gram matrix fixes the variance. Recall that</p>
+<div class="math">$$
+\sum_{i,j} (a_{ij} - \bar{a})^2 = \sum_{i,j} a_{ij}^2 - 2 \bar{a} \sum_{i,j} a_{ij} + \sum_{i,j} \bar{a}^2 = \sum_{i,j} a_{ij}^2 - 4 \bar{a}^2
+$$</div>
+<p>Using our constraints on the Gram matrix and centered Gram matrix, this reduces to
+</p>
+<div class="math">$$
+\frac{3}{4} = 1 - 4 \bar{a}^2 \;\;\; \text{or} \;\;\; \bar{a}^2 = \frac{1}{16}
+$$</div>
+<p>Because each of the <span class="math">\(a_{ij}\)</span> is nonnegative, it follows that <span class="math">\(\bar{a} = 1/4\)</span> or, equivalently, that the sum of the four activations is <span class="math">\(1\)</span>. It turns out that there are exactly four images satisfying these properties. To see this, consider our constraints:</p>
 <div class="math">$$
 \sum_{i, j} a_{ij}^2 = a_{11}^2 + a_{12}^2 + a_{21}^2 + a_{22}^2 = 1
 $$</div>
@@ -91,15 +107,35 @@ $$</div>
 \sum_{i, j} a_{ij} =  a_{11} + a_{12}  + a_{21} + a_{22} = 1
 $$</div>
 <p>
-Note that
+and note that
 </p>
 <div class="math">$$
 \left(\sum_{i, j} a_{ij} \right)^2 = \sum_{ij} a_{ij}^2 + 2 \left( \sum_{(i,j) \neq (k, \ell)} a_{ij} a_{k\ell} \right)
 $$</div>
 <p>
-Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each of the cross terms <span class="math">\(a_{ij} a_{k\ell}\)</span> is zero and, therefore, that at most one of the <span class="math">\(a_{ij}\)</span> is nonzero.</p>
-<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices and centered Gram matrices" src="/images/style-transfer/same_gram_and_centered.png" style="max-width:90%" /></p>
-<h4>A More Rigid Style</h4>
+Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each of the cross terms <span class="math">\(a_{ij} a_{k\ell}\)</span> is zero and, therefore, that at most one of the <span class="math">\(a_{ij}\)</span> is nonzero. The four images sharing these constraints are given below:</p>
+<p align="center"><img align="center" alt="2x2 black and white images with the same Gram matrices and centered Gram matrices" src="https://yvanhuele.github.io/images/style-transfer/same_gram_and_centered.png" style="max-width:90%" /></p>
+<p>To me, these appear to have the same style.</p>
+<h4>Further Exploration</h4>
+<p>I hope the example above was illuminating. We should be wary of drawing too strong of conclusions from such a simple example, but it seemed like a manageable place to start, and suggests some directions for further exploration. What if we work with 4x4 images and 2x2 filters? What if we use a different parametrization with black corresponding to -1 and use rectified linear activations? How should we measure the distance between styles when the Gram matrix is larger than 1x1?</p>
+<p>We won't pursue any of these ideas any further here. Instead I'll take the easy way out and leave their exploration as an exercise for the interested reader.</p>
+<h3>Visualizing Style</h3>
+<p>In the next part, we're going to try to understand style by using style transfer. Earlier, we tried generating Delicate Arch using a content image and no style. Now, we're going to generate images using only style and no content. The naming convention for the original images is a little haphazard (I didn't realize how far I would take this when I just got started and didn't feel like renaming them afterwards) but matches the file names in the <a href="https://github.com/yvanhuele/yvanhuele.github.io/tree/extra-blog-materials/exploring-style">Github repository</a>.</p>
+<h4>The More Rigid Style</h4>
+<p>To capture style, instead of using the Gram matrix by itself, we'll use both the Gram matrix and the centered Gram matrix. Despite the discussion above, this decision was based more on trial-and-error than on theory. While playing around with style transfer and trying to understand what was going on, I replaced the Gram matrix with the centered Gram matrix. Often this improved the patterns in the generated image but messed up the colors. After experimenting a little, I decided to try and incorporate both matrices into my algorithm and suddenly the styles I was generating seemed a lot more accurate. I'll try and demonstrate this with some examples below.</p>
+<p>(An aside: When performing style transfer, you may be less interested in generating the most stylistically accurate image than in generating an aesthetically pleasing one. In that case, I would recommend experimenting a bit with how you choose to measure style.)</p>
+<p>Let's begin with a simple example: what is the style of a dark circle on a light background? In the figure below, the image on the left was used as the style image. The three other images were generated to match its style using just the regular Gram matrix, just the centered Gram matrix, and both Gram matrices, respectively.</p>
+<p align="center"><img alt="Styles generated from a dark circle on a light background using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_circle.png" style="max-width:90%" /></p>
+<p>The image generated using the Gram matrix is mostly gray with a few concentration of light or dark points. The image generated using the centered Gram matrix does a better job of achieving the light and dark colors, but the balance is off: too many dark regions, not enough light regions. Using both matrices, we get a nice compromise: a good balance between light and dark, curved rather than straight edges, and mostly contiguous blobs.</p>
+<p>Let's look at some more examples.</p>
+<p>In some cases, the regular Gram matrix outperformed the centered Gram matrix. The colors are quite a bit off in the this muddy style generated using the centered matrix:</p>
+<p align="center"><img alt="Styles generated from mud1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_mud1.png" style="max-width:90%" /></p>
+<p>In other cases, the centered Gram matrix outperformed the regular Gram matrix. The regular Gram matrix failed to capture the purple color of some of these peppers:</p>
+<p align="center"><img alt="Styles generated from vegetables1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_vegetables1.png" style="max-width:90%" /></p>
+<p>And sometimes each captured different aspects of the style.</p>
+<p align="center"><img alt="Styles generated from pinecone1 using Gram matrices, centered Gram matrices, and both" src="https://yvanhuele.github.io/images/style-transfer/style_comparison_pinecone1.png" style="max-width:90%" /></p>
+<p>But in all cases, at least to my eye, the images generated using a combination of both the regular Gram matrix and the centered Gram matrix most accurately captured the style of the original image they were based on.</p>
+<p>To incorporate both Gram matrices, I modified the gram_matrix function in the tutorial. The modified function I used is presented below:</p>
 <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">gram_matrix</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
 
@@ -130,21 +166,42 @@ Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each o
 
 
 <h4>Different Style Layers</h4>
-<p align="center"><img align="center" alt="Style images generated from plants1 using different layers" src="/images/style-transfer/style_layers_plants1.png" style="max-width:90%" /></p>
+<p>Just like content, the style of an image is different depending on which layers are considered. Let's start by working with the first layer of the convolutional network and add layers one by one.</p>
+<p align="center"><img align="center" alt="Style images generated from plants1 using an increasing number of layers" src="https://yvanhuele.github.io/images/style-transfer/style_layers_plants1.png" style="max-width:90%" /></p>
+<p>Using only the first layer seems to produce the right colors, but not much else. Adding the second layer, larger patches of matching colors begin to appear. When the third layer is added, little flame-like shapes begin to appear and these get larger and more leaf-like when the fourth and fifth layers are added into the mix. After the fifth or sixth layer, things don't seem to change much. This might be an optimization problem — maybe if we used a more sophisticated optimization technique and let our algorithm run longer, we'd get a different result — or it could just be that the effect of the higher layers is too subtle to notice.</p>
+<p>Since we tend to associate style with low level features (e.g. colors and edges), it makes sense to set an upper bound on which layers to use for style and include all of the layers below that. The style images generated in the previous section and those that we'll look at in the next section used all 13 layers of the network when considering style. Just to get an idea about the stylistic contribution of each individual layer, let's see what happens if we work with the layers one at a time.</p>
+<p align="center"><img align="center" alt="Style images generated from plants1 using different individual layers" src="https://yvanhuele.github.io/images/style-transfer/style_layers_plants1bis.png" style="max-width:90%" /></p>
+<p>As we work with higher and higher layers, the patterns become more and more complex while the colors match those of the original image less and less.</p>
 <h2>Fashion Show</h2>
-<p>Some generated style images closely resemble the image they're based on. I think images generated using the style of mud 4 and rock 1 are particularly convincing.</p>
-<p align="center"><img alt="Styles that closely match the original image: algae1, barnacles2, cactus1, and cherry1" src="/images/style-transfer/faithful_styles1.png" style="max-width:90%" />
-<img alt="Styles that closely match the original image: fall_leaves1, flower5, moss1, and mud4" src="/images/style-transfer/faithful_styles2.png" style="max-width:90%" />
-<img alt="Styles that closely match the original image: needles1, petroglyphs1, rock1, and stones1" src="/images/style-transfer/faithful_styles3.png" style="max-width:90%" /></p>
-<p>Flowers were a little hit and miss. Often the generated image pushed the bright color of the flower to the border of the image (e.g. flowers 7, 8, 10, and 12 below). Images generated from photos with lots of small flowers tended to match the originals more closely (flower 17 below and flower 5 above).</p>
-<p align="center"><img alt="Styles for flower images 1, 4, 7, and 8" src="/images/style-transfer/flower_styles1.png" style="max-width:90%" />
-<img alt="Styles for flower images 10, 12, 13, and 17" src="/images/style-transfer/flower_styles2.png" style="max-width:90%" /></p>
-<p>Some of my personal favorites:</p>
-<p align="center"><img alt="Original image and generated style for aspen1, books1, bridge1, and cat2" src="/images/style-transfer/favorite_styles1.png" style="max-width:90%" />
-<img alt="Original image and generated style for flamingo1, flower15, gasworks1, and lichen2" src="/images/style-transfer/favorite_styles2.png" style="max-width:90%" />
-<img alt="Original image and generated style for lilypad1, pie1, spiderweb1, and yucca2" src="/images/style-transfer/favorite_styles3.png" style="max-width:90%" /></p>
-<p align="center"><img alt="" src="/images/style-transfer/artificial_styles.png" style="max-width:90%" /></p>
-<p align="center"><img alt="" src="/images/style-transfer/artwork_styles.png" style="max-width:90%" /></p>
+<p>Now that we've decided how we're measuring style (using both the Gram matrix and centered Gram matrix for the feature activations from all 13 convolutional layers), we can try and understand style by looking at examples.</p>
+<h4>Contrived</h4>
+<p>Let's begin with some simple, contrived examples.</p>
+<p align="center"><img alt="Style images generated from simple geometric patterns" src="https://yvanhuele.github.io/images/style-transfer/artificial_styles.png" style="max-width:90%" /></p>
+<p>The halves style image is mostly separated into large light and dark patches with long straight edges on the boundaries. With the checkers style, we get sharp corners, lots of straight vertical and horizontal edges, and a good balance of red and black. With the rainbow circles style, most of the edges are curved and the ordering of the colors is preserved (e.g. red patches are nested between orange and purple). The <a href="https://www.lipsum.com/">lorem ipsum</a> style doesn't contain any identifiable characters and the neat line spacing has been lost, but still displays many text-like properties.</p>
+<h4>Mostly Style</h4>
+<p>One way to understand style is to identify images that seem to be mostly style. Below are some examples where the generated style images closely resemble the images they're based on.</p>
+<p align="center"><img alt="Styles that closely match the original image: algae1, barnacles2, cactus1, and cherry1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles1.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: fall_leaves1, flower5, moss1, and mud4" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles2.png" style="max-width:90%" />
+<img alt="Styles that closely match the original image: needles1, petroglyphs1, rock1, and stones1" src="https://yvanhuele.github.io/images/style-transfer/faithful_styles3.png" style="max-width:90%" /></p>
+<p>We did lose a little bit of content (e.g. the crack between the barnacle covered rocks), but for the most part, the generated images could fill in for the originals if one doesn't look too closely. I think images generated using the style of mud 4 and rock 1 are particularly convincing.</p>
+<h4>Not Just Style</h4>
+<p>Conversely, we can look at images that have content in addition to style. You'd be unlikely to confuse the original images below with their associated generated style images.</p>
+<p align="center"><img alt="Styles that don't closely match the original image: bighorn1, butterfly2, cactus3, redrock6" src="https://yvanhuele.github.io/images/style-transfer/content_styles1.png" style="max-width:90%" /></p>
+<p>Indeed, given only the generated images (those on the bottom row), you'd likely have a hard time determining what the original images (top row) might have been. It probably comes as no surprise that the photograph of the bighorn sheep is more than just style. Nevertheless, it's good to confirm our definition of style isn't too broad.</p>
+<h4>Flowers</h4>
+<p>Images of flowers provide a good case study of the balance between style and content. Even though they display many strong stylistic elements, individual flowers tend to contain more content (the arrangement of the petals and leaves, the position of the flower relative to the background), while images containing many of the same type of flowers together (flower 5 above and flower 17 below) are closer to pure style.</p>
+<p align="center"><img alt="Styles for flower images 1, 4, 7, and 8" src="https://yvanhuele.github.io/images/style-transfer/flower_styles1.png" style="max-width:90%" />
+<img alt="Styles for flower images 10, 12, 13, and 17" src="https://yvanhuele.github.io/images/style-transfer/flower_styles2.png" style="max-width:90%" /></p>
+<p>The flower images also highlight a common pattern of our algorithm: often the generated image pushes the bright color of the flower to the border of the image (e.g. flowers 7, 8, 10, and 12).</p>
+<h4>Surprises</h4>
+<p>Though I couldn't perfectly predict the appearance of the generated style images in advance, I found most of the results unsurprising. There were a few, however, that caught me off guard.</p>
+<p align="center"><img alt="Styles from images with either more or less content than I expected: forest1, lilypad1, redrock2" src="https://yvanhuele.github.io/images/style-transfer/surprise_styles1.png" style="max-width:67.5%" /></p>
+<p>It seems the forest 1 and redrock 2 images contained more content than I thought. I was expecting to see straight dark tree trunks in the generated forest canopy. And I hadn't considered how important the location of the shadows is in the red rock image. The lilypad 1 image, on the other hand, seems to be less content and more style than I initially expected. In particular, the flowers in the generated image seem quite plausible.</p>
+<h4>Rogues Gallery</h4>
+<p>Thanks for reading! I hope that these examples have shed some light on what elements are treated as style for the purposes of style transfer (at least for the VGG-16 network). I had a lot of fun generating these images and I'll leave you with a few of my personal favorites:</p>
+<p align="center"><img alt="Original image and generated style for aspen1, books1, bridge1, and cat2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles1.png" style="max-width:90%" />
+<img alt="Original image and generated style for flamingo1, flower15, gasworks1, and lichen2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles2.png" style="max-width:90%" />
+<img alt="Original image and generated style for lilypad1, pie1, spiderweb1, and yucca2" src="https://yvanhuele.github.io/images/style-transfer/favorite_styles3.png" style="max-width:90%" /></p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
         indent = "0em",
@@ -202,6 +259,13 @@ Since <span class="math">\(0 \leq a_{ij} \leq 1\)</span>, it follows that each o
 </script>                </article>
             </aside><!-- /#featured -->
         <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
         </section><!-- /#extras -->
 
         <footer id="contentinfo" class="body">
