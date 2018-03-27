@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+        <meta charset="utf-8" />
+        <title>K-Means Clustering Part 2</title>
+        <link rel="stylesheet" href="https://yvanhuele.github.io/theme/css/main.css" />
+        <link href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Salientia Stuff Atom Feed" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://yvanhuele.github.io/">Salientia Stuff </a></h1>
+                <nav><ul>
+                    <li><a href="https://yvanhuele.github.io/pages/about.html">About</a></li>
+                    <li class="active"><a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a></li>
+                    <li><a href="https://yvanhuele.github.io/category/word-of-the-week.html">Word of the Week</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://yvanhuele.github.io/k-means-clustering-part-2.html" rel="bookmark"
+           title="Permalink to K-Means Clustering Part 2">K-Means Clustering Part 2</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2018-03-27T11:15:00-06:00">
+                Published: Tue 27 March 2018
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://yvanhuele.github.io/author/yannick.html">Yannick</a>
+        </address>
+<p>In <a href="https://yvanhuele.github.io/category/data-science.html">Data Science</a>.</p>
+<p>tags: <a href="https://yvanhuele.github.io/tag/clustering.html">clustering</a> <a href="https://yvanhuele.github.io/tag/k-means.html">k-means</a> </p>
+</footer><!-- /.post-info -->      <h2>Initialization: Where do you start?</h2>
+<p>In <a href="https://yvanhuele.github.io/k-means-clustering-part-1.html">part 1 of this series</a>, we introduced K-means clustering. We ended with an overview of the algorithm which involved repeatedly updating cluster labels and cluster centroids until they settled down to a stable configuration, but we postponed the discussion of one crucial step: where to start. That is the focus of this post.</p>
+<p>There are a variety of initialization methods for <span class="math">\(K\)</span>-means clustering. The existence of different initialization techniques points to one weakness of K-means clustering: the final clustering is very much dependent on how you start. This dependence reveals itself in two ways:</p>
+<ul>
+<li>Different initializations can lead to different final clusterings <strong>of different quality</strong>. That is, one set of clusters may be more tightly packed than the other. In more technical terms, the within cluster variation of the resulting clusters are different.</li>
+<li>Even when two initializations result in the same final clustering, <strong>one may require many more steps</strong> to get there.</li>
+</ul>
+<p>The goal of this post is to look at a few different initialization techniques and some things that can go wrong in the the K-means algorithm. Our goal is exploration, so you should be careful not to generalize too much from the examples. In particular, we'll be working with toy data sets in 2-dimensions and will not have to worry about the <a href="https://en.wikipedia.org/wiki/Curse_of_dimensionality">curse of dimensionality</a>.</p>
+<p>For a more thorough survey of different initialization methods, see the paper <a href="https://arxiv.org/abs/1209.1960"><em>A Comparative Study of Efficient Initialization Methods for the K-Means Clustering Algorithm</em></a> by Celebi, Kingravi, and Vela.</p>
+<p>The <a href="https://github.com/yvanhuele/yvanhuele.github.io/blob/extra-blog-materials/K-Means/K-Means%20Clustering.ipynb">Jupyter notebook</a> containing the code for part 1 of this series has been expanded to include the code for the second part as well.</p>
+<h2>Random Methods</h2>
+<p>We will look at the following three initialization methods:</p>
+<ul>
+<li><strong>Random partition</strong>: Initialize the labels by randomly assigning each data point to a cluster.</li>
+<li><strong>Random points</strong>: Initialize the centroids by selecting <span class="math">\(K\)</span> data points uniformly at random.</li>
+<li><strong><span class="math">\(K\)</span>-means++</strong>: Initialize the centroids by selecting <span class="math">\(K\)</span> data points sequentially following a probability distribution determined by the centroids that have already been selected.</li>
+</ul>
+<p><strong>A note about the terminology</strong>: Different authors have referred to both the random partition method and the random points method as <em>Forgy</em> initialization after Edward Forgy. Celebi et al maintain that Forgy introduced the random partition method and that the random points method was introduced by James MacQueen. We'll try to avoid mis-attribution and confusion by using the names above.</p>
+<p>The Scikit-Learn <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html">KMeans</a> function allows for three different initialization techniques including K-means++ (the default) and random points (simply called random). For the third initialization method, you can directly provide an array of initial cluster labels.    </p>
+<p>A key feature of these three methods is that the initialization involves some randomness. As mentioned above and as we'll see below in more detail, it is possible for different initializations to converge to different solutions. One way to deal with this problem is to run K-means several times with different random initializations (though not necessarily different initialization techniques).</p>
+<blockquote>
+<p><em>The first step is random, it's true<br />
+Once it's taken, you just follow through<br />
+And times when your cluster<br />
+Results are lackluster<br />
+You're better off starting anew</em></p>
+</blockquote>
+<h2>Random Partition Initialization</h2>
+<p>For the random partition initialization method, we assign each point to a cluster uniformly at random.</p>
+<p align="center"><img alt="Random partition initialization and first steps of K-means" src="https://yvanhuele.github.io/images/k-means/random_partition_initialization.png" style="max-width:80%" /></p>
+<p>The initial centroids generated this way tend to be close together: the centroid of each cluster is an unbiased estimator of the centroid of the full data. This can be a problem if no actual data points are near the centroid of the full data. For example, the initialization below caused the number of clusters to drop.</p>
+<p align="center"><img alt="Initialization causing the number of clusters to decrease" src="https://yvanhuele.github.io/images/k-means/bad_random_partition.png" style="max-width:100%" /></p>
+<p>No point is closest to the initial blue centroid. This means, that when we assign labels in the next step, no point gets assigned to that cluster. The algorithm proceeds and we end up with just 3 clusters instead of the desired 4. </p>
+<p>Consider an extreme example of this problem in 1-dimension. Suppose we have 10 evenly-sized tightly packed clusters of points concentrated at each of the odd integers from -9 to 9. If the data set is large, then when we randomly assign labels to each point, the resulting centroids are likely to be near 0. If the clusters are sufficiently tightly packed, then there will be a large interval between -1 and 1 containing no data points. In this situation, many of the clusters will disappear. </p>
+<p>We can try and avoid the problem of empty clusters at initialization by starting with centroids that are themselves data points. This is the idea of random points initialization and it means the clusters obtained from the initial centroids will not be empty. Unfortunately, for certain data configurations, it can still happen that a cluster becomes empty at a later point in the algorithm (an example can be found <a href="http://user.ceng.metu.edu.tr/~tcan/ceng465_f1314/Schedule/KMeansEmpty.html">here</a>), so any implementation of K-means should address this problem in some way.</p>
+<p>The random partition initialization method also has problems in the edge case when the number of clusters is large relative to the number of data points. For example, if we try to separate 1000 data points into 200 clusters, the random partition method will only yield the full 200 initial clusters just over 25 percent of the time. We can simulate this scenario in Python with the following block of code:</p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1"># Set number of data points and clusters</span>
+<span class="n">datapoints</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">clusters</span> <span class="o">=</span> <span class="mi">200</span>
+
+<span class="c1"># Perform a large number of trials</span>
+<span class="n">trials</span> <span class="o">=</span> <span class="mi">100000</span>
+<span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+    <span class="c1"># Randomly assign labels</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">clusters</span><span class="p">),</span> <span class="n">size</span> <span class="o">=</span> <span class="n">datapoints</span><span class="p">)</span>
+    <span class="c1"># Check whether all labels are present</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">assignments</span><span class="p">))</span> <span class="o">==</span> <span class="n">clusters</span><span class="p">:</span>
+        <span class="n">success</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># Print the frequency of successful trials</span>
+<span class="k">print</span><span class="p">(</span><span class="n">success</span><span class="o">/</span><span class="n">trials</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Alternatively, as a fun little exercise you can calculate the exact probability using the inclusion-exclusion principle.</p>
+<h2>Random Points Initialization</h2>
+<p>In random points initialization we initialize the centroids rather than the labels. This is done by choosing K data points uniformly at random to be the initial centroids.</p>
+<p align="center"><img alt="Random points initialization and first steps of K-means" src="https://yvanhuele.github.io/images/k-means/random_points_initialization.png" style="max-width:80%" /></p>
+<p>Because we're choosing the points uniformly at random, the initial centroids need not be very representative of the full data. In such cases, the algorithm can take a long time to converge or may converge to a poor clustering configuration. Below is an example an initialization that leads to a poor final clustering.</p>
+<p align="center"><img alt="Random points initialization leading to sub-optimal clusters" src="https://yvanhuele.github.io/images/k-means/bad_random_points.png" style="max-width:80%" /></p>
+<p>Indeed, of the four clusters, only one seems to have been correctly isolated. The two clusters near the bottom have been combined into one large red cluster, while the cluster at the top has been split into two separate blue and orange clusters.</p>
+<p>One feature contributing to the poor clustering is the fact that the initial centroids were so close together. Having the initial centroids near each other doesn't necessarily mean we'll end up with a bad clustering, but it makes it more likely and often increases the number of steps that must be performed before the clusters settle down.</p>
+<h2>K-means++</h2>
+<p>The K-means++ initialization technique tries to avoid initial centroids that are close together.</p>
+<p>K-means++ is similar to random points initialization, in that it selects data points at random to act as the initial centroids. However, instead of choosing these points uniformly at random, K-means++ chooses them successively in such a way as to encourage the initial centroids to be spread out. Specifically, the probability that a point will be chosen as an initial centroid is proportional to the square of its distance to the existing initial centroids.</p>
+<p>Let's illustrate how this works with an example. To visualize the process more clearly, we'll work with a smaller dataset, consisting of only 20 data points separated into 4 clusters.</p>
+<p align="center"><img alt="K-means++ initialization" src="https://yvanhuele.github.io/images/k-means/plus_plus_initialization.png" style="max-width:100%" /></p>
+<p>When choosing the first centroid, all points are equally likely to be chosen. This is illustrated above by the fact that all the points in the first plot have the same hue. Once the first centroid is chosen, points farthest from this centroid are most likely to be chosen for the second centroid. Notice that in the third plot on the first row, the points in the upper left corner are darker and those in the bottom right are lighter. And, indeed, the point chosen as the second centroid is one of the ones in the top left. Once we have two centroids, the points in the center and center-left become darker, while those in the top-left become lighter.</p>
+<p>Notice that each of the initial centroids we chose is part of a different cluster. The probability of this occurring if the points are chosen uniformly at random is a little less than 13 percent (there are <span class="math">\(20\)</span> choose <span class="math">\(4\)</span> = <span class="math">\(4845\)</span> ways of choosing 4 points and <span class="math">\(5^4 = 625\)</span> ways of choosing one point from each cluster). Indeed, applying random points initialization on the same data with different random seeds gives the following initializations:</p>
+<p align="center"><img alt="Random points initialization on small data set for five different seeds" src="https://yvanhuele.github.io/images/k-means/five_random_points.png" style="max-width:100%" /></p>
+<p>In none of these cases do we have exactly one initial centroid per cluster.</p>
+<p>Let's compare with <span class="math">\(K\)</span>-means++:</p>
+<p align="center"><img alt="K-means++ initialization on small data set for five different seeds" src="https://yvanhuele.github.io/images/k-means/five_kplusplus.png" style="max-width:100%" /></p>
+<p>Even though the initial centroids varied from one initialization to the next, we still ended up with one centroid per cluster.</p>
+<p>Having well separated initial centroids often causes the K-means clustering algorithm to converge more quickly. Of course, the K-means++ initialization procedure is more complicated, so there's a trade-off.</p>
+<h2>Comparing the Three Methods on our Toy Data</h2>
+<p>For each of the three methods, I ran 100 different random initializations and then carried out K-means clustering until the clusters stabilized. The results are plotted below (with a little jitter to show the frequency of different outcomes).</p>
+<p align="center"><img alt="Cluster quality and time to cluster for 100 runs of each of the three initialization techniques" src="https://yvanhuele.github.io/images/k-means/initialization_comparisons.png" style="max-width:100%" /></p>
+<p>Along the x-axis, we have the within-cluster variance, which is measure of the quality of the final clusters: tightly packed clusters have lower variance, spread-out clusters have higher variance. Along the y-axis, we have the number of steps following initialization before the clusters stabilize (where a step consists of either recomputing the centroids given the labels or recomputing the labels given the centroids). Points in the lower left of the graph correspond to good initializations (quickly converge to tight clusters) while those in the upper right correspond to poor initializations (slowly converge to spread-out clusters).</p>
+<p>The number of steps is a useful metric for gauging how well the algorithm performs once the initialization is complete, but does not reflect the complexity of the initialization. The points corresponding to K-means++ hug the lower left corner more closely than the other two initializations, but initializing K-means++ is also more complex. That being said, my experience working with data was that K-means++ was a little more efficient than the other two algorithms, taking roughly 60% as long to run completely (initialization all the way to stable clustering) as random points initialization (the slowest of the three).</p>
+<p>Finally, I want to emphasize that the within cluster variance varied between runs for all three initialization methods. Each method obtained the minimum possible within cluster variance and each method also yielded non-optimal final clusterings. Therefore, whatever initialization technique you use, it is important to run multiple random initializations. (In Scikit-Learn, the default setting is to run 10 random initializations and return the best output of the 10.)</p>
+<h2>What's Next?</h2>
+<p>In the next part of this series, we'll look more closely at how K-means minimizes the within cluster variance and look at data sets where minimizing this variance does not capture the underlying structure in the data. Some numeric data sets are just not well suited to K-means clustering. But sometimes data can be transformed to be more amenable to K-means through tricks like standardization. In part 3, we'll discuss these topics in more detail and illustrate them with example data sets.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://yvanhuele.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is a slight modification of the notmyidea theme by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
