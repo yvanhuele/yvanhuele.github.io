@@ -1,5 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Salientia Stuff - Word of the Week</title><link href="https://yvanhuele.github.io/" rel="alternate"></link><link href="https://yvanhuele.github.io/feeds/word-of-the-week.atom.xml" rel="self"></link><id>https://yvanhuele.github.io/</id><updated>2018-04-11T22:00:00-06:00</updated><entry><title>Varken</title><link href="https://yvanhuele.github.io/varken.html" rel="alternate"></link><published>2018-04-11T22:00:00-06:00</published><updated>2018-04-11T22:00:00-06:00</updated><author><name>Yannick</name></author><id>tag:yvanhuele.github.io,2018-04-11:/varken.html</id><summary type="html">&lt;h2&gt;Down to Earth&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Salientia Stuff - Word of the Week</title><link href="https://yvanhuele.github.io/" rel="alternate"></link><link href="https://yvanhuele.github.io/feeds/word-of-the-week.atom.xml" rel="self"></link><id>https://yvanhuele.github.io/</id><updated>2018-04-24T22:30:00-06:00</updated><entry><title>Управление</title><link href="https://yvanhuele.github.io/upravlenie.html" rel="alternate"></link><published>2018-04-24T22:30:00-06:00</published><updated>2018-04-24T22:30:00-06:00</updated><author><name>Yannick</name></author><id>tag:yvanhuele.github.io,2018-04-24:/upravlenie.html</id><summary type="html">&lt;h2&gt;Out of Control&lt;/h2&gt;
+&lt;p&gt;This week's featured word is управление, the Russian word for administration, direction, or control, because no matter how hard I try, I can't seem to avoid learning about languages.&lt;/p&gt;
+&lt;p&gt;Earlier this week, I was watching one of the lecture videos recorded for a &lt;a href="http://rll.berkeley.edu/deeprlcourse/"&gt;course on deep reinforcement …&lt;/a&gt;&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Out of Control&lt;/h2&gt;
+&lt;p&gt;This week's featured word is управление, the Russian word for administration, direction, or control, because no matter how hard I try, I can't seem to avoid learning about languages.&lt;/p&gt;
+&lt;p&gt;Earlier this week, I was watching one of the lecture videos recorded for a &lt;a href="http://rll.berkeley.edu/deeprlcourse/"&gt;course on deep reinforcement learning at Berkeley&lt;/a&gt;. While explaining the basic terminology, the professor explained there are &lt;a href="https://youtu.be/C_LGsoe36I8?t=11m30s"&gt;two common notations for states and actions&lt;/a&gt;:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;"In most of this class [...] I'm going to use 's' to denote states and 'a' to denote actions. This kind of notation was popularized with the introduction of dynamic programming by Richard Bellman in the 1950s, and it makes a lot of sense because S is the first letter of state in the English language and A is the first letter of the word action. Those of you that have maybe more of a robotics or control background [...] might notice a slightly different notation where the letter 'x' is used to denote state and 'u' is used to denote action. This kind of notation was popularized in optimal control with work by folks like Lev Pontryagin. This kind of notation also makes sense because X is the letter that's often used to denote an unknown variable and U is the first letter for the word action in Russian, управление."&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Of course, this is not the first time knowledge of foreign languages has been foisted upon me when I was quietly minding my own business.&lt;/p&gt;
+&lt;h2&gt;Escape from the Lavatorial&lt;/h2&gt;
+&lt;p&gt;My first encounter with the Cyrillic alphabet was through the &lt;a href="https://en.wikipedia.org/wiki/Tate%E2%80%93Shafarevich_group"&gt;Tate-Shafarevich group&lt;/a&gt;, which plays an important role in the &lt;a href="https://en.wikipedia.org/wiki/Birch_and_Swinnerton-Dyer_conjecture"&gt;Birch and Swinnerton-Dyer (BSD) Conjecture&lt;/a&gt;, one of the most important open problems in number theory. The Cyrillic letter &lt;a href="https://en.wikipedia.org/wiki/Sha_(Cyrillic)"&gt;Ш (Sha)&lt;/a&gt; is commonly used to denote the Tate-Shafarevich group. For example, in John Tate's famous description of the BSD conjecture:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;"This remarkable conjecture relates the behavior of a function &lt;span class="math"&gt;\(L\)&lt;/span&gt; at a point where it is not at present known to be defined to the order of a group &lt;span class="math"&gt;\(Ш\)&lt;/span&gt; which is not known to be finite."&lt;/em&gt;&lt;br /&gt;
+(&lt;a href="https://eudml.org/doc/142261"&gt;pg 198 of &lt;em&gt;The Arithmetic of Elliptic Curves&lt;/em&gt;&lt;/a&gt;)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The use of Ш to denote the Tate-Shafarevich group was introduced by J.W.S. Cassels. In &lt;em&gt;Lectures on Elliptic Curves&lt;/em&gt;, Cassels makes the following remark in a footnote:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;"This is the author's most lasting contribution to the subject. The original notation was TS, which, Tate tells me, was intended to continue the lavatorial allusion of WC [Weil–Châtelet group]. The Americanism "tough shit" indicates the part that is difficult to eliminate."&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Even if you don't use Ш to denote the Tate-Shafarevich group, there's still some hidden information contained in the name. A &lt;a href="https://mathoverflow.net/questions/19987/math-paper-authors-order"&gt;common convention in mathematics&lt;/a&gt; is to list authors in alphabetical order. Lavatorial acronyms aside, I've heard the following justification for putting Tate's name first: Though &lt;em&gt;S&lt;/em&gt; comes before &lt;em&gt;T&lt;/em&gt; in the Roman alphabet, &lt;em&gt;Т&lt;/em&gt; comes before &lt;em&gt;Ш&lt;/em&gt; in Cyrillic.&lt;/p&gt;
+&lt;h2&gt;International Notation&lt;/h2&gt;
+&lt;p&gt;In topology, an &lt;a href="https://en.wikipedia.org/wiki/F%CF%83_set"&gt;&lt;span class="math"&gt;\(F_\sigma\)&lt;/span&gt; set&lt;/a&gt; is the countable union of closed sets and a &lt;a href="https://en.wikipedia.org/wiki/G%CE%B4_set"&gt;&lt;span class="math"&gt;\(G_\delta\)&lt;/span&gt; set&lt;/a&gt; is the countable intersection of open sets. There is a mix of languages at play in this notation: the F stands for &lt;em&gt;fermé&lt;/em&gt; (closed in French) and the sigma for &lt;em&gt;somme&lt;/em&gt; (sum in French) while the G and delta stand for &lt;em&gt;Gebiet&lt;/em&gt; and &lt;em&gt;Durchschnitt&lt;/em&gt;, the German words for (in the context of set theory) open set and intersection respectively.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://mathoverflow.net/a/74013"&gt;It seems&lt;/a&gt; this notation was first introduced by Felix Hausdorff in his book &lt;a href="https://en.wikipedia.org/wiki/Grundz%C3%BCge_der_Mengenlehre"&gt;&lt;em&gt;Grundzüge der Mengenlehre&lt;/em&gt;&lt;/a&gt; (Basics of Set Theory):&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;"Wir bezeichnen abgeschlosssene Mengen, wie schon öfter, mit F (ensemble fermé), Gebiete mit G."&lt;/em&gt; &lt;br /&gt;
+(&lt;a href="https://archive.org/stream/grundzgedermen00hausuoft#page/304/mode/2up"&gt;pg 304 of the first edition&lt;/a&gt;)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The use of both German and French in the notation brings to mind the international nature of mathematics (e.g. the &lt;a href="https://en.wikipedia.org/wiki/International_Congress_of_Mathematicians"&gt;International Congress of Mathematicians&lt;/a&gt;) at the beginning of the 20th century. Hausdorff's book was first published in April of 1914.&lt;/p&gt;
+&lt;script type="text/javascript"&gt;if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width &lt; 768) ? "left" : align;
+        indent = (screen.width &lt; 768) ? "0em" : indent;
+        linebreak = (screen.width &lt; 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+&lt;/script&gt;</content><category term="Russian"></category><category term="control theory"></category></entry><entry><title>Varken</title><link href="https://yvanhuele.github.io/varken.html" rel="alternate"></link><published>2018-04-11T22:00:00-06:00</published><updated>2018-04-11T22:00:00-06:00</updated><author><name>Yannick</name></author><id>tag:yvanhuele.github.io,2018-04-11:/varken.html</id><summary type="html">&lt;h2&gt;Down to Earth&lt;/h2&gt;
 &lt;p&gt;This week's featured word is &lt;em&gt;varken&lt;/em&gt;, the Dutch word for pig. Similarly, the Dutch word for pork is &lt;em&gt;varkensvlees&lt;/em&gt;  (pigs-meat).&lt;/p&gt;
 &lt;p&gt;Another dutch word is &lt;em&gt;aarde&lt;/em&gt;, which means earth or soil. Planet Earth is &lt;em&gt;de Aarde&lt;/em&gt;. And earth makes an appearance in &lt;em&gt;aardappel&lt;/em&gt;, the Dutch word for potato …&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Down to Earth&lt;/h2&gt;
 &lt;p&gt;This week's featured word is &lt;em&gt;varken&lt;/em&gt;, the Dutch word for pig. Similarly, the Dutch word for pork is &lt;em&gt;varkensvlees&lt;/em&gt;  (pigs-meat).&lt;/p&gt;
